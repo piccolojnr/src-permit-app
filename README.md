@@ -2,7 +2,8 @@
 
 A Quick-Start Electron Template with Vite, React, Shadcn UI, Tailwind CSS v3, Typescript and React Router to help you rapidly develop cross-platform desktop applications.
 
-![img](https://github.com/user-attachments/assets/74539b45-50b5-4c78-a2a3-b82b73339991)
+<img width="1106" alt="image" src="https://github.com/user-attachments/assets/efb1e975-9941-4347-8a66-98a414a7013e" />
+
 ---
 
 ## Features
