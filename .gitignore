@@ -1,0 +1,7 @@
+**/.idea
+**/node_modules
+**/out
+**/.vite
+
+yarn.lock
+package-lock.json
