@@ -1,13 +1,21 @@
 import { prisma } from '../prisma/client';
 import bcrypt from 'bcryptjs';
 import QRCode from 'qrcode';
-
+import { Prisma, Permit } from '@prisma/client';
 
 export interface PermitData {
-    studentId: number;
+    studentId: string;
     amountPaid: number;
-    validityPeriod: number;
+    expiryDate: Date;
     issuedById: number;
+}
+
+export interface PaginatedResponse<T> {
+    data: T[];
+    total: number;
+    page: number;
+    pageSize: number;
+    totalPages: number;
 }
 
 export interface PermitResponse {
@@ -17,13 +25,71 @@ export interface PermitResponse {
     error?: string;
 }
 
-
-// TODO: pagination, sorting, filtering
 export class PermitService {
+    static async getPermits(params: { page?: number; pageSize?: number; search?: string; status?: string }): Promise<{ success: boolean; data?: PaginatedResponse<Permit & { student: { name: string; studentId: string }; issuedBy: { username: string } }>; error?: string }> {
+        try {
+            const { page = 1, pageSize = 10, search, status } = params;
+            const where: Prisma.PermitWhereInput = {
+                ...(status && { status }),
+                ...(search && {
+                    OR: [
+                        { originalCode: { contains: search } },
+                        { student: { name: { contains: search } } },
+                        { student: { studentId: { contains: search } } }
+                    ]
+                })
+            };
 
+            const skip = Math.max((page - 1) * pageSize, 0);
+            const [total, permits] = await Promise.all([
+                prisma.permit.count({ where }),
+                prisma.permit.findMany({
+                    where,
+                    skip,
+                    take: pageSize,
+                    include: {
+                        student: {
+                            select: {
+                                name: true,
+                                studentId: true
+                            }
+                        },
+                        issuedBy: {
+                            select: {
+                                username: true
+                            }
+                        }
+                    },
+                    orderBy: { createdAt: 'desc' }
+                })
+            ]);
+
+            return {
+                success: true,
+                data: {
+                    data: permits,
+                    total,
+                    page,
+                    pageSize,
+                    totalPages: Math.ceil(total / pageSize)
+                }
+            };
+        } catch (error: any) {
+            return { success: false, error: error.message };
+        }
+    }
 
     static async createPermit(permitData: PermitData): Promise<PermitResponse> {
         try {
+            // check student id
+            const student = await prisma.student.findUnique({
+                where: { studentId: permitData.studentId }
+            });
+
+            if (!student) {
+                return { success: false, error: "Student not found" };
+            }
+
             const permitCode = this.generatePermitCode();
             const hashedCode = await bcrypt.hash(permitCode, 10);
 
@@ -31,9 +97,9 @@ export class PermitService {
                 data: {
                     permitCode: hashedCode,
                     originalCode: permitCode,
-                    validityPeriod: permitData.validityPeriod,
+                    expiryDate: permitData.expiryDate,
                     amountPaid: permitData.amountPaid,
-                    studentId: permitData.studentId,
+                    studentId: student.id,
                     issuedById: permitData.issuedById,
                     status: 'active'
                 },
@@ -76,6 +142,14 @@ export class PermitService {
             for (const permit of permits) {
                 const isValid = await bcrypt.compare(permitCode, permit.permitCode);
                 if (isValid) {
+                    const isExpired = new Date() > permit.expiryDate;
+                    if (isExpired) {
+                        await prisma.permit.update({
+                            where: { id: permit.id },
+                            data: { status: 'expired' }
+                        });
+                        return { valid: false, reason: 'expired' };
+                    }
                     return {
                         valid: true,
                         permit,
@@ -83,7 +157,7 @@ export class PermitService {
                 }
             }
 
-            return { valid: false };
+            return { valid: false, reason: 'not_found' };
         } catch (error: any) {
             throw new Error(error.message);
         }
@@ -119,23 +193,34 @@ export class PermitService {
         try {
             const permit = await prisma.permit.findUnique({
                 where: { id: permitId },
-                include: { student: true }
+                include: {
+                    student: true,
+                    issuedBy: {
+                        select: {
+                            username: true
+                        }
+                    }
+                }
             });
 
             if (!permit) {
                 return { exists: false };
             }
 
-            const daysElapsed = Math.floor(
-                (Date.now() - permit.createdAt.getTime()) / (1000 * 60 * 60 * 24)
-            );
-            const isExpired = daysElapsed > permit.validityPeriod;
-            const daysRemaining = Math.max(0, permit.validityPeriod - daysElapsed);
+            const now = new Date();
+            const isExpired = now > permit.expiryDate;
+            const daysRemaining = Math.max(0, Math.ceil((permit.expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+
+            if (isExpired && permit.status === 'active') {
+                await prisma.permit.update({
+                    where: { id: permitId },
+                    data: { status: 'expired' }
+                });
+            }
 
             return {
                 exists: true,
                 permit,
-                daysElapsed,
                 daysRemaining,
                 isExpired,
                 status: isExpired ? 'expired' : permit.status

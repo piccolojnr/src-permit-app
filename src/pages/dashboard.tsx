@@ -1,18 +1,15 @@
-import { Users, FileCheck, AlertCircle, DollarSign } from "lucide-react"
+import { format } from "date-fns"
+import { Users, FileCheck, AlertCircle, DollarSign, TrendingUp, Calendar, Clock, BarChart3 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { usePermissions } from "@/components/hooks/use-permissions"
 import { toast } from "@/components/hooks/use-toast"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/shadcn/ui/card"
-
-interface Stats {
-    totalStudents: number
-    activePermits: number
-    expiringSoon: number
-    totalRevenue: number
-}
+import { DashboardStats } from "@/components/lib/services/dashboard.service"
+import { Button } from "@/components/shadcn/ui/button"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/shadcn/ui/card"
+import { Progress } from "@/components/shadcn/ui/progress"
 
 export function Dashboard() {
-    const [stats, setStats] = useState<Stats>({
+    const [stats, setStats] = useState<DashboardStats>({
         totalStudents: 0,
         activePermits: 0,
         expiringSoon: 0,
@@ -24,44 +21,15 @@ export function Dashboard() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                // Get permit statistics
-                const response = await window.api.permit.stats()
+                const response = await window.api.dashboard.getStats()
                 if (response.success && response.data) {
-                    const stats = response.data.reduce(
-                        (acc: any, curr: any) => {
-                            if (curr.status === "active") {
-                                acc.activePermits = curr._count
-                            }
-                            acc.totalPermits = (acc.totalPermits || 0) + curr._count
-                            return acc
-                        },
-                        { totalPermits: 0, activePermits: 0 }
-                    )
-
-                    // Get total students
-                    const studentsResponse = await window.api.student.search("")
-                    if (studentsResponse.success && studentsResponse.data) {
-                        stats.totalStudents = studentsResponse.data.length
-                        stats.totalRevenue = studentsResponse.data.reduce((sum: number, student: any) => {
-                            return sum + student.permits.reduce((permitSum: number, permit: any) => permitSum + permit.amountPaid, 0)
-                        }, 0)
-                    }
-
-                    // Get expiring permits
-                    const expiringResponse = await window.api.permit.stats()
-                    if (expiringResponse.success && expiringResponse.data) {
-                        stats.expiringSoon = expiringResponse.data.reduce((count: number, student: any) => {
-                            return (
-                                count +
-                                student.permits.filter((permit: any) => {
-                                    const daysElapsed = Math.floor((Date.now() - new Date(permit.createdAt).getTime()) / (1000 * 60 * 60 * 24))
-                                    return permit.status === "active" && permit.validityPeriod - daysElapsed <= 7 && permit.validityPeriod - daysElapsed > 0
-                                }).length
-                            )
-                        }, 0)
-                    }
-
-                    setStats(stats)
+                    setStats(response.data)
+                } else {
+                    toast({
+                        variant: "destructive",
+                        title: "Error",
+                        description: response.error || "Failed to fetch dashboard statistics"
+                    })
                 }
             } catch (error) {
                 toast({
@@ -81,52 +49,165 @@ export function Dashboard() {
         return <div>Loading...</div>
     }
 
+    const utilizationRate = stats.totalStudents > 0 ? (stats.activePermits / stats.totalStudents) * 100 : 0
+
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-            {permissions.canViewStudents() && (
+        <div className="space-y-6">
+            <div className="flex items-center justify-between">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
+                    <p className="text-muted-foreground">Welcome to your permit management dashboard</p>
+                </div>
+                <Button onClick={() => window.location.reload()}>
+                    <Clock className="w-4 h-4 mr-2" />
+                    Refresh
+                </Button>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {permissions.canViewStudents() && (
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                            <CardTitle className="text-sm font-medium">Total Students</CardTitle>
+                            <Users className="w-4 h-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.totalStudents}</div>
+                            <p className="text-xs text-muted-foreground">Registered students in the system</p>
+                        </CardContent>
+                    </Card>
+                )}
+                {permissions.canViewPermits() && (
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                            <CardTitle className="text-sm font-medium">Active Permits</CardTitle>
+                            <FileCheck className="w-4 h-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.activePermits}</div>
+                            <p className="text-xs text-muted-foreground">Currently active permits</p>
+                        </CardContent>
+                    </Card>
+                )}
+                {permissions.canViewPermits() && (
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                            <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
+                            <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">{stats.expiringSoon}</div>
+                            <p className="text-xs text-muted-foreground">Permits expiring in 7 days</p>
+                        </CardContent>
+                    </Card>
+                )}
+                {permissions.canViewReports() && (
+                    <Card>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
+                            <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
+                            <DollarSign className="w-4 h-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+                            <p className="text-xs text-muted-foreground">Total revenue from permits</p>
+                        </CardContent>
+                    </Card>
+                )}
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">Total Students</CardTitle>
-                        <Users className="w-4 h-4 text-muted-foreground" />
+                    <CardHeader>
+                        <CardTitle>System Overview</CardTitle>
+                        <CardDescription>Key metrics and system status</CardDescription>
                     </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.totalStudents}</div>
+                    <CardContent className="space-y-4">
+                        <div className="space-y-2">
+                            <div className="flex items-center justify-between">
+                                <span className="text-sm font-medium">Permit Utilization</span>
+                                <span className="text-sm text-muted-foreground">{utilizationRate.toFixed(1)}%</span>
+                            </div>
+                            <Progress value={utilizationRate} className="h-2" />
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <div className="space-y-1">
+                                <p className="text-sm text-muted-foreground">Average Revenue per Student</p>
+                                <p className="text-2xl font-bold">
+                                    ${stats.totalStudents > 0 ? (stats.totalRevenue / stats.totalStudents).toFixed(2) : "0.00"}
+                                </p>
+                            </div>
+                            <div className="space-y-1">
+                                <p className="text-sm text-muted-foreground">Active Permit Rate</p>
+                                <p className="text-2xl font-bold">
+                                    {stats.totalStudents > 0 ? ((stats.activePermits / stats.totalStudents) * 100).toFixed(1) : "0"}%
+                                </p>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
-            )}
-            {permissions.canViewPermits() && (
+
                 <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">Active Permits</CardTitle>
-                        <FileCheck className="w-4 h-4 text-muted-foreground" />
+                    <CardHeader>
+                        <CardTitle>Quick Actions</CardTitle>
+                        <CardDescription>Common tasks and shortcuts</CardDescription>
                     </CardHeader>
                     <CardContent>
-                        <div className="text-2xl font-bold">{stats.activePermits}</div>
+                        <div className="grid grid-cols-2 gap-4">
+                            <Button variant="outline" className="h-auto py-4" onClick={() => (window.location.href = "/permits")}>
+                                <div className="flex flex-col items-center gap-2">
+                                    <FileCheck className="w-6 h-6" />
+                                    <span>Manage Permits</span>
+                                </div>
+                            </Button>
+                            <Button variant="outline" className="h-auto py-4" onClick={() => (window.location.href = "/students")}>
+                                <div className="flex flex-col items-center gap-2">
+                                    <Users className="w-6 h-6" />
+                                    <span>View Students</span>
+                                </div>
+                            </Button>
+                            <Button variant="outline" className="h-auto py-4" onClick={() => (window.location.href = "/reports")}>
+                                <div className="flex flex-col items-center gap-2">
+                                    <BarChart3 className="w-6 h-6" />
+                                    <span>View Reports</span>
+                                </div>
+                            </Button>
+                            <Button variant="outline" className="h-auto py-4" onClick={() => (window.location.href = "/settings")}>
+                                <div className="flex flex-col items-center gap-2">
+                                    <Calendar className="w-6 h-6" />
+                                    <span>Settings</span>
+                                </div>
+                            </Button>
+                        </div>
                     </CardContent>
                 </Card>
-            )}
-            {permissions.canViewPermits() && (
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-                        <AlertCircle className="w-4 h-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">{stats.expiringSoon}</div>
-                    </CardContent>
-                </Card>
-            )}
-            {permissions.canViewReports() && (
-                <Card>
-                    <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
-                        <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                        <DollarSign className="w-4 h-4 text-muted-foreground" />
-                    </CardHeader>
-                    <CardContent>
-                        <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
-                    </CardContent>
-                </Card>
-            )}
+            </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>System Information</CardTitle>
+                    <CardDescription>Current system status and details</CardDescription>
+                </CardHeader>
+                <CardContent>
+                    <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
+                        <div className="space-y-1">
+                            <p className="text-sm text-muted-foreground">Last Updated</p>
+                            <p className="text-sm font-medium">{format(new Date(), "MMM d, yyyy 'at' h:mm a")}</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-sm text-muted-foreground">System Status</p>
+                            <p className="text-sm font-medium text-green-600">All Systems Operational</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-sm text-muted-foreground">Database Status</p>
+                            <p className="text-sm font-medium text-green-600">Connected</p>
+                        </div>
+                        <div className="space-y-1">
+                            <p className="text-sm text-muted-foreground">Version</p>
+                            <p className="text-sm font-medium">1.0.0</p>
+                        </div>
+                    </div>
+                </CardContent>
+            </Card>
         </div>
     )
 }

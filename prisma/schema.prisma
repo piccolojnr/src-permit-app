@@ -15,17 +15,17 @@ generator zod {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
-  username  String   @unique
-  email     String   @unique
-  password  String // Hashed password
-  role      Role     @relation(fields: [roleId], references: [id])
-  roleId    Int
-  permits   Permit[] // Permits issued by this user
-  auditLogs AuditLog[]
+  id             Int             @id @default(autoincrement())
+  username       String          @unique
+  email          String          @unique
+  password       String // Hashed password
+  role           Role            @relation(fields: [roleId], references: [id])
+  roleId         Int
+  permits        Permit[] // Permits issued by this user
+  auditLogs      AuditLog[]
   recoveryTokens RecoveryToken[]
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
 }
 
 model Role {
@@ -70,18 +70,19 @@ model Student {
 }
 
 model Permit {
-  id             Int      @id @default(autoincrement())
-  permitCode     String   @unique // Hashed permit code
-  originalCode   String   @unique // Original permit code
-  status         String   @default("active") // active, revoked, expired
-  validityPeriod Int      // Number of days
-  amountPaid     Float
-  student        Student  @relation(fields: [studentId], references: [id])
-  studentId      Int
-  issuedBy       User     @relation(fields: [issuedById], references: [id])
-  issuedById     Int
-  createdAt      DateTime @default(now())
-  updatedAt      DateTime @updatedAt
+  id           Int      @id @default(autoincrement())
+  permitCode   String   @unique // Hashed permit code
+  originalCode String   @unique // Original permit code
+  status       String   @default("active") // active, revoked, expired
+  startDate    DateTime @default(now())
+  expiryDate   DateTime
+  amountPaid   Float
+  student      Student  @relation(fields: [studentId], references: [id])
+  studentId    Int
+  issuedBy     User?    @relation(fields: [issuedById], references: [id])
+  issuedById   Int?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
 }
 
 model AuditLog {

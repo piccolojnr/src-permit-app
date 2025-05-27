@@ -22,7 +22,7 @@ export const RolePermissionScalarFieldEnumSchema = z.enum(['roleId','permissionI
 
 export const StudentScalarFieldEnumSchema = z.enum(['id','studentId','name','email','course','level','number','createdAt','updatedAt']);
 
-export const PermitScalarFieldEnumSchema = z.enum(['id','permitCode','originalCode','status','validityPeriod','amountPaid','studentId','issuedById','createdAt','updatedAt']);
+export const PermitScalarFieldEnumSchema = z.enum(['id','permitCode','originalCode','status','startDate','expiryDate','amountPaid','studentId','issuedById','createdAt','updatedAt']);
 
 export const AuditLogScalarFieldEnumSchema = z.enum(['id','action','userId','details','createdAt']);
 
@@ -117,10 +117,11 @@ export const PermitSchema = z.object({
   permitCode: z.string(),
   originalCode: z.string(),
   status: z.string(),
-  validityPeriod: z.number().int(),
+  startDate: z.coerce.date(),
+  expiryDate: z.coerce.date(),
   amountPaid: z.number(),
   studentId: z.number().int(),
-  issuedById: z.number().int(),
+  issuedById: z.number().int().nullable(),
   createdAt: z.coerce.date(),
   updatedAt: z.coerce.date(),
 })
@@ -338,7 +339,8 @@ export const PermitSelectSchema: z.ZodType<Prisma.PermitSelect> = z.object({
   permitCode: z.boolean().optional(),
   originalCode: z.boolean().optional(),
   status: z.boolean().optional(),
-  validityPeriod: z.boolean().optional(),
+  startDate: z.boolean().optional(),
+  expiryDate: z.boolean().optional(),
   amountPaid: z.boolean().optional(),
   studentId: z.boolean().optional(),
   issuedById: z.boolean().optional(),
@@ -786,14 +788,15 @@ export const PermitWhereInputSchema: z.ZodType<Prisma.PermitWhereInput> = z.obje
   permitCode: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   originalCode: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   status: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  validityPeriod: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  startDate: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  expiryDate: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   amountPaid: z.union([ z.lazy(() => FloatFilterSchema),z.number() ]).optional(),
   studentId: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
-  issuedById: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  issuedById: z.union([ z.lazy(() => IntNullableFilterSchema),z.number() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   student: z.union([ z.lazy(() => StudentScalarRelationFilterSchema),z.lazy(() => StudentWhereInputSchema) ]).optional(),
-  issuedBy: z.union([ z.lazy(() => UserScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional(),
+  issuedBy: z.union([ z.lazy(() => UserNullableScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional().nullable(),
 }).strict();
 
 export const PermitOrderByWithRelationInputSchema: z.ZodType<Prisma.PermitOrderByWithRelationInput> = z.object({
@@ -801,10 +804,11 @@ export const PermitOrderByWithRelationInputSchema: z.ZodType<Prisma.PermitOrderB
   permitCode: z.lazy(() => SortOrderSchema).optional(),
   originalCode: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
-  validityPeriod: z.lazy(() => SortOrderSchema).optional(),
+  startDate: z.lazy(() => SortOrderSchema).optional(),
+  expiryDate: z.lazy(() => SortOrderSchema).optional(),
   amountPaid: z.lazy(() => SortOrderSchema).optional(),
   studentId: z.lazy(() => SortOrderSchema).optional(),
-  issuedById: z.lazy(() => SortOrderSchema).optional(),
+  issuedById: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   student: z.lazy(() => StudentOrderByWithRelationInputSchema).optional(),
@@ -847,14 +851,15 @@ export const PermitWhereUniqueInputSchema: z.ZodType<Prisma.PermitWhereUniqueInp
   OR: z.lazy(() => PermitWhereInputSchema).array().optional(),
   NOT: z.union([ z.lazy(() => PermitWhereInputSchema),z.lazy(() => PermitWhereInputSchema).array() ]).optional(),
   status: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  validityPeriod: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
+  startDate: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  expiryDate: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   amountPaid: z.union([ z.lazy(() => FloatFilterSchema),z.number() ]).optional(),
   studentId: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
-  issuedById: z.union([ z.lazy(() => IntFilterSchema),z.number().int() ]).optional(),
+  issuedById: z.union([ z.lazy(() => IntNullableFilterSchema),z.number().int() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   student: z.union([ z.lazy(() => StudentScalarRelationFilterSchema),z.lazy(() => StudentWhereInputSchema) ]).optional(),
-  issuedBy: z.union([ z.lazy(() => UserScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional(),
+  issuedBy: z.union([ z.lazy(() => UserNullableScalarRelationFilterSchema),z.lazy(() => UserWhereInputSchema) ]).optional().nullable(),
 }).strict());
 
 export const PermitOrderByWithAggregationInputSchema: z.ZodType<Prisma.PermitOrderByWithAggregationInput> = z.object({
@@ -862,10 +867,11 @@ export const PermitOrderByWithAggregationInputSchema: z.ZodType<Prisma.PermitOrd
   permitCode: z.lazy(() => SortOrderSchema).optional(),
   originalCode: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
-  validityPeriod: z.lazy(() => SortOrderSchema).optional(),
+  startDate: z.lazy(() => SortOrderSchema).optional(),
+  expiryDate: z.lazy(() => SortOrderSchema).optional(),
   amountPaid: z.lazy(() => SortOrderSchema).optional(),
   studentId: z.lazy(() => SortOrderSchema).optional(),
-  issuedById: z.lazy(() => SortOrderSchema).optional(),
+  issuedById: z.union([ z.lazy(() => SortOrderSchema),z.lazy(() => SortOrderInputSchema) ]).optional(),
   createdAt: z.lazy(() => SortOrderSchema).optional(),
   updatedAt: z.lazy(() => SortOrderSchema).optional(),
   _count: z.lazy(() => PermitCountOrderByAggregateInputSchema).optional(),
@@ -883,10 +889,11 @@ export const PermitScalarWhereWithAggregatesInputSchema: z.ZodType<Prisma.Permit
   permitCode: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   originalCode: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
   status: z.union([ z.lazy(() => StringWithAggregatesFilterSchema),z.string() ]).optional(),
-  validityPeriod: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+  startDate: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
+  expiryDate: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   amountPaid: z.union([ z.lazy(() => FloatWithAggregatesFilterSchema),z.number() ]).optional(),
   studentId: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
-  issuedById: z.union([ z.lazy(() => IntWithAggregatesFilterSchema),z.number() ]).optional(),
+  issuedById: z.union([ z.lazy(() => IntNullableWithAggregatesFilterSchema),z.number() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeWithAggregatesFilterSchema),z.coerce.date() ]).optional(),
 }).strict();
@@ -1338,12 +1345,13 @@ export const PermitCreateInputSchema: z.ZodType<Prisma.PermitCreateInput> = z.ob
   permitCode: z.string(),
   originalCode: z.string(),
   status: z.string().optional(),
-  validityPeriod: z.number().int(),
+  startDate: z.coerce.date().optional(),
+  expiryDate: z.coerce.date(),
   amountPaid: z.number(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
   student: z.lazy(() => StudentCreateNestedOneWithoutPermitsInputSchema),
-  issuedBy: z.lazy(() => UserCreateNestedOneWithoutPermitsInputSchema)
+  issuedBy: z.lazy(() => UserCreateNestedOneWithoutPermitsInputSchema).optional()
 }).strict();
 
 export const PermitUncheckedCreateInputSchema: z.ZodType<Prisma.PermitUncheckedCreateInput> = z.object({
@@ -1351,10 +1359,11 @@ export const PermitUncheckedCreateInputSchema: z.ZodType<Prisma.PermitUncheckedC
   permitCode: z.string(),
   originalCode: z.string(),
   status: z.string().optional(),
-  validityPeriod: z.number().int(),
+  startDate: z.coerce.date().optional(),
+  expiryDate: z.coerce.date(),
   amountPaid: z.number(),
   studentId: z.number().int(),
-  issuedById: z.number().int(),
+  issuedById: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional()
 }).strict();
@@ -1363,12 +1372,13 @@ export const PermitUpdateInputSchema: z.ZodType<Prisma.PermitUpdateInput> = z.ob
   permitCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originalCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  validityPeriod: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  expiryDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   amountPaid: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   student: z.lazy(() => StudentUpdateOneRequiredWithoutPermitsNestedInputSchema).optional(),
-  issuedBy: z.lazy(() => UserUpdateOneRequiredWithoutPermitsNestedInputSchema).optional()
+  issuedBy: z.lazy(() => UserUpdateOneWithoutPermitsNestedInputSchema).optional()
 }).strict();
 
 export const PermitUncheckedUpdateInputSchema: z.ZodType<Prisma.PermitUncheckedUpdateInput> = z.object({
@@ -1376,10 +1386,11 @@ export const PermitUncheckedUpdateInputSchema: z.ZodType<Prisma.PermitUncheckedU
   permitCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originalCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  validityPeriod: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  expiryDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   amountPaid: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   studentId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
-  issuedById: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  issuedById: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -1389,10 +1400,11 @@ export const PermitCreateManyInputSchema: z.ZodType<Prisma.PermitCreateManyInput
   permitCode: z.string(),
   originalCode: z.string(),
   status: z.string().optional(),
-  validityPeriod: z.number().int(),
+  startDate: z.coerce.date().optional(),
+  expiryDate: z.coerce.date(),
   amountPaid: z.number(),
   studentId: z.number().int(),
-  issuedById: z.number().int(),
+  issuedById: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional()
 }).strict();
@@ -1401,7 +1413,8 @@ export const PermitUpdateManyMutationInputSchema: z.ZodType<Prisma.PermitUpdateM
   permitCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originalCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  validityPeriod: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  expiryDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   amountPaid: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -1412,10 +1425,11 @@ export const PermitUncheckedUpdateManyInputSchema: z.ZodType<Prisma.PermitUnchec
   permitCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originalCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  validityPeriod: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  expiryDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   amountPaid: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   studentId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
-  issuedById: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  issuedById: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -1892,14 +1906,25 @@ export const FloatFilterSchema: z.ZodType<Prisma.FloatFilter> = z.object({
   not: z.union([ z.number(),z.lazy(() => NestedFloatFilterSchema) ]).optional(),
 }).strict();
 
+export const IntNullableFilterSchema: z.ZodType<Prisma.IntNullableFilter> = z.object({
+  equals: z.number().optional().nullable(),
+  in: z.number().array().optional().nullable(),
+  notIn: z.number().array().optional().nullable(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedIntNullableFilterSchema) ]).optional().nullable(),
+}).strict();
+
 export const StudentScalarRelationFilterSchema: z.ZodType<Prisma.StudentScalarRelationFilter> = z.object({
   is: z.lazy(() => StudentWhereInputSchema).optional(),
   isNot: z.lazy(() => StudentWhereInputSchema).optional()
 }).strict();
 
-export const UserScalarRelationFilterSchema: z.ZodType<Prisma.UserScalarRelationFilter> = z.object({
-  is: z.lazy(() => UserWhereInputSchema).optional(),
-  isNot: z.lazy(() => UserWhereInputSchema).optional()
+export const UserNullableScalarRelationFilterSchema: z.ZodType<Prisma.UserNullableScalarRelationFilter> = z.object({
+  is: z.lazy(() => UserWhereInputSchema).optional().nullable(),
+  isNot: z.lazy(() => UserWhereInputSchema).optional().nullable()
 }).strict();
 
 export const PermitCountOrderByAggregateInputSchema: z.ZodType<Prisma.PermitCountOrderByAggregateInput> = z.object({
@@ -1907,7 +1932,8 @@ export const PermitCountOrderByAggregateInputSchema: z.ZodType<Prisma.PermitCoun
   permitCode: z.lazy(() => SortOrderSchema).optional(),
   originalCode: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
-  validityPeriod: z.lazy(() => SortOrderSchema).optional(),
+  startDate: z.lazy(() => SortOrderSchema).optional(),
+  expiryDate: z.lazy(() => SortOrderSchema).optional(),
   amountPaid: z.lazy(() => SortOrderSchema).optional(),
   studentId: z.lazy(() => SortOrderSchema).optional(),
   issuedById: z.lazy(() => SortOrderSchema).optional(),
@@ -1917,7 +1943,6 @@ export const PermitCountOrderByAggregateInputSchema: z.ZodType<Prisma.PermitCoun
 
 export const PermitAvgOrderByAggregateInputSchema: z.ZodType<Prisma.PermitAvgOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
-  validityPeriod: z.lazy(() => SortOrderSchema).optional(),
   amountPaid: z.lazy(() => SortOrderSchema).optional(),
   studentId: z.lazy(() => SortOrderSchema).optional(),
   issuedById: z.lazy(() => SortOrderSchema).optional()
@@ -1928,7 +1953,8 @@ export const PermitMaxOrderByAggregateInputSchema: z.ZodType<Prisma.PermitMaxOrd
   permitCode: z.lazy(() => SortOrderSchema).optional(),
   originalCode: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
-  validityPeriod: z.lazy(() => SortOrderSchema).optional(),
+  startDate: z.lazy(() => SortOrderSchema).optional(),
+  expiryDate: z.lazy(() => SortOrderSchema).optional(),
   amountPaid: z.lazy(() => SortOrderSchema).optional(),
   studentId: z.lazy(() => SortOrderSchema).optional(),
   issuedById: z.lazy(() => SortOrderSchema).optional(),
@@ -1941,7 +1967,8 @@ export const PermitMinOrderByAggregateInputSchema: z.ZodType<Prisma.PermitMinOrd
   permitCode: z.lazy(() => SortOrderSchema).optional(),
   originalCode: z.lazy(() => SortOrderSchema).optional(),
   status: z.lazy(() => SortOrderSchema).optional(),
-  validityPeriod: z.lazy(() => SortOrderSchema).optional(),
+  startDate: z.lazy(() => SortOrderSchema).optional(),
+  expiryDate: z.lazy(() => SortOrderSchema).optional(),
   amountPaid: z.lazy(() => SortOrderSchema).optional(),
   studentId: z.lazy(() => SortOrderSchema).optional(),
   issuedById: z.lazy(() => SortOrderSchema).optional(),
@@ -1951,7 +1978,6 @@ export const PermitMinOrderByAggregateInputSchema: z.ZodType<Prisma.PermitMinOrd
 
 export const PermitSumOrderByAggregateInputSchema: z.ZodType<Prisma.PermitSumOrderByAggregateInput> = z.object({
   id: z.lazy(() => SortOrderSchema).optional(),
-  validityPeriod: z.lazy(() => SortOrderSchema).optional(),
   amountPaid: z.lazy(() => SortOrderSchema).optional(),
   studentId: z.lazy(() => SortOrderSchema).optional(),
   issuedById: z.lazy(() => SortOrderSchema).optional()
@@ -1971,6 +1997,27 @@ export const FloatWithAggregatesFilterSchema: z.ZodType<Prisma.FloatWithAggregat
   _sum: z.lazy(() => NestedFloatFilterSchema).optional(),
   _min: z.lazy(() => NestedFloatFilterSchema).optional(),
   _max: z.lazy(() => NestedFloatFilterSchema).optional()
+}).strict();
+
+export const IntNullableWithAggregatesFilterSchema: z.ZodType<Prisma.IntNullableWithAggregatesFilter> = z.object({
+  equals: z.number().optional().nullable(),
+  in: z.number().array().optional().nullable(),
+  notIn: z.number().array().optional().nullable(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedIntNullableWithAggregatesFilterSchema) ]).optional().nullable(),
+  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _avg: z.lazy(() => NestedFloatNullableFilterSchema).optional(),
+  _sum: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _min: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _max: z.lazy(() => NestedIntNullableFilterSchema).optional()
+}).strict();
+
+export const UserScalarRelationFilterSchema: z.ZodType<Prisma.UserScalarRelationFilter> = z.object({
+  is: z.lazy(() => UserWhereInputSchema).optional(),
+  isNot: z.lazy(() => UserWhereInputSchema).optional()
 }).strict();
 
 export const AuditLogCountOrderByAggregateInputSchema: z.ZodType<Prisma.AuditLogCountOrderByAggregateInput> = z.object({
@@ -2425,12 +2472,22 @@ export const StudentUpdateOneRequiredWithoutPermitsNestedInputSchema: z.ZodType<
   update: z.union([ z.lazy(() => StudentUpdateToOneWithWhereWithoutPermitsInputSchema),z.lazy(() => StudentUpdateWithoutPermitsInputSchema),z.lazy(() => StudentUncheckedUpdateWithoutPermitsInputSchema) ]).optional(),
 }).strict();
 
-export const UserUpdateOneRequiredWithoutPermitsNestedInputSchema: z.ZodType<Prisma.UserUpdateOneRequiredWithoutPermitsNestedInput> = z.object({
+export const UserUpdateOneWithoutPermitsNestedInputSchema: z.ZodType<Prisma.UserUpdateOneWithoutPermitsNestedInput> = z.object({
   create: z.union([ z.lazy(() => UserCreateWithoutPermitsInputSchema),z.lazy(() => UserUncheckedCreateWithoutPermitsInputSchema) ]).optional(),
   connectOrCreate: z.lazy(() => UserCreateOrConnectWithoutPermitsInputSchema).optional(),
   upsert: z.lazy(() => UserUpsertWithoutPermitsInputSchema).optional(),
+  disconnect: z.union([ z.boolean(),z.lazy(() => UserWhereInputSchema) ]).optional(),
+  delete: z.union([ z.boolean(),z.lazy(() => UserWhereInputSchema) ]).optional(),
   connect: z.lazy(() => UserWhereUniqueInputSchema).optional(),
   update: z.union([ z.lazy(() => UserUpdateToOneWithWhereWithoutPermitsInputSchema),z.lazy(() => UserUpdateWithoutPermitsInputSchema),z.lazy(() => UserUncheckedUpdateWithoutPermitsInputSchema) ]).optional(),
+}).strict();
+
+export const NullableIntFieldUpdateOperationsInputSchema: z.ZodType<Prisma.NullableIntFieldUpdateOperationsInput> = z.object({
+  set: z.number().optional().nullable(),
+  increment: z.number().optional(),
+  decrement: z.number().optional(),
+  multiply: z.number().optional(),
+  divide: z.number().optional()
 }).strict();
 
 export const UserCreateNestedOneWithoutAuditLogsInputSchema: z.ZodType<Prisma.UserCreateNestedOneWithoutAuditLogsInput> = z.object({
@@ -2613,6 +2670,33 @@ export const NestedFloatWithAggregatesFilterSchema: z.ZodType<Prisma.NestedFloat
   _max: z.lazy(() => NestedFloatFilterSchema).optional()
 }).strict();
 
+export const NestedIntNullableWithAggregatesFilterSchema: z.ZodType<Prisma.NestedIntNullableWithAggregatesFilter> = z.object({
+  equals: z.number().optional().nullable(),
+  in: z.number().array().optional().nullable(),
+  notIn: z.number().array().optional().nullable(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedIntNullableWithAggregatesFilterSchema) ]).optional().nullable(),
+  _count: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _avg: z.lazy(() => NestedFloatNullableFilterSchema).optional(),
+  _sum: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _min: z.lazy(() => NestedIntNullableFilterSchema).optional(),
+  _max: z.lazy(() => NestedIntNullableFilterSchema).optional()
+}).strict();
+
+export const NestedFloatNullableFilterSchema: z.ZodType<Prisma.NestedFloatNullableFilter> = z.object({
+  equals: z.number().optional().nullable(),
+  in: z.number().array().optional().nullable(),
+  notIn: z.number().array().optional().nullable(),
+  lt: z.number().optional(),
+  lte: z.number().optional(),
+  gt: z.number().optional(),
+  gte: z.number().optional(),
+  not: z.union([ z.number(),z.lazy(() => NestedFloatNullableFilterSchema) ]).optional().nullable(),
+}).strict();
+
 export const RoleCreateWithoutUsersInputSchema: z.ZodType<Prisma.RoleCreateWithoutUsersInput> = z.object({
   name: z.string(),
   description: z.string().optional().nullable(),
@@ -2639,7 +2723,8 @@ export const PermitCreateWithoutIssuedByInputSchema: z.ZodType<Prisma.PermitCrea
   permitCode: z.string(),
   originalCode: z.string(),
   status: z.string().optional(),
-  validityPeriod: z.number().int(),
+  startDate: z.coerce.date().optional(),
+  expiryDate: z.coerce.date(),
   amountPaid: z.number(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
@@ -2651,7 +2736,8 @@ export const PermitUncheckedCreateWithoutIssuedByInputSchema: z.ZodType<Prisma.P
   permitCode: z.string(),
   originalCode: z.string(),
   status: z.string().optional(),
-  validityPeriod: z.number().int(),
+  startDate: z.coerce.date().optional(),
+  expiryDate: z.coerce.date(),
   amountPaid: z.number(),
   studentId: z.number().int(),
   createdAt: z.coerce.date().optional(),
@@ -2763,10 +2849,11 @@ export const PermitScalarWhereInputSchema: z.ZodType<Prisma.PermitScalarWhereInp
   permitCode: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   originalCode: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
   status: z.union([ z.lazy(() => StringFilterSchema),z.string() ]).optional(),
-  validityPeriod: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  startDate: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
+  expiryDate: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   amountPaid: z.union([ z.lazy(() => FloatFilterSchema),z.number() ]).optional(),
   studentId: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
-  issuedById: z.union([ z.lazy(() => IntFilterSchema),z.number() ]).optional(),
+  issuedById: z.union([ z.lazy(() => IntNullableFilterSchema),z.number() ]).optional().nullable(),
   createdAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
   updatedAt: z.union([ z.lazy(() => DateTimeFilterSchema),z.coerce.date() ]).optional(),
 }).strict();
@@ -3060,11 +3147,12 @@ export const PermitCreateWithoutStudentInputSchema: z.ZodType<Prisma.PermitCreat
   permitCode: z.string(),
   originalCode: z.string(),
   status: z.string().optional(),
-  validityPeriod: z.number().int(),
+  startDate: z.coerce.date().optional(),
+  expiryDate: z.coerce.date(),
   amountPaid: z.number(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional(),
-  issuedBy: z.lazy(() => UserCreateNestedOneWithoutPermitsInputSchema)
+  issuedBy: z.lazy(() => UserCreateNestedOneWithoutPermitsInputSchema).optional()
 }).strict();
 
 export const PermitUncheckedCreateWithoutStudentInputSchema: z.ZodType<Prisma.PermitUncheckedCreateWithoutStudentInput> = z.object({
@@ -3072,9 +3160,10 @@ export const PermitUncheckedCreateWithoutStudentInputSchema: z.ZodType<Prisma.Pe
   permitCode: z.string(),
   originalCode: z.string(),
   status: z.string().optional(),
-  validityPeriod: z.number().int(),
+  startDate: z.coerce.date().optional(),
+  expiryDate: z.coerce.date(),
   amountPaid: z.number(),
-  issuedById: z.number().int(),
+  issuedById: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional()
 }).strict();
@@ -3357,7 +3446,8 @@ export const PermitCreateManyIssuedByInputSchema: z.ZodType<Prisma.PermitCreateM
   permitCode: z.string(),
   originalCode: z.string(),
   status: z.string().optional(),
-  validityPeriod: z.number().int(),
+  startDate: z.coerce.date().optional(),
+  expiryDate: z.coerce.date(),
   amountPaid: z.number(),
   studentId: z.number().int(),
   createdAt: z.coerce.date().optional(),
@@ -3382,7 +3472,8 @@ export const PermitUpdateWithoutIssuedByInputSchema: z.ZodType<Prisma.PermitUpda
   permitCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originalCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  validityPeriod: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  expiryDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   amountPaid: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -3394,7 +3485,8 @@ export const PermitUncheckedUpdateWithoutIssuedByInputSchema: z.ZodType<Prisma.P
   permitCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originalCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  validityPeriod: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  expiryDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   amountPaid: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   studentId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -3406,7 +3498,8 @@ export const PermitUncheckedUpdateManyWithoutIssuedByInputSchema: z.ZodType<Pris
   permitCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originalCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  validityPeriod: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  expiryDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   amountPaid: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   studentId: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
@@ -3531,9 +3624,10 @@ export const PermitCreateManyStudentInputSchema: z.ZodType<Prisma.PermitCreateMa
   permitCode: z.string(),
   originalCode: z.string(),
   status: z.string().optional(),
-  validityPeriod: z.number().int(),
+  startDate: z.coerce.date().optional(),
+  expiryDate: z.coerce.date(),
   amountPaid: z.number(),
-  issuedById: z.number().int(),
+  issuedById: z.number().int().optional().nullable(),
   createdAt: z.coerce.date().optional(),
   updatedAt: z.coerce.date().optional()
 }).strict();
@@ -3542,11 +3636,12 @@ export const PermitUpdateWithoutStudentInputSchema: z.ZodType<Prisma.PermitUpdat
   permitCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originalCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  validityPeriod: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  expiryDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   amountPaid: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
-  issuedBy: z.lazy(() => UserUpdateOneRequiredWithoutPermitsNestedInputSchema).optional()
+  issuedBy: z.lazy(() => UserUpdateOneWithoutPermitsNestedInputSchema).optional()
 }).strict();
 
 export const PermitUncheckedUpdateWithoutStudentInputSchema: z.ZodType<Prisma.PermitUncheckedUpdateWithoutStudentInput> = z.object({
@@ -3554,9 +3649,10 @@ export const PermitUncheckedUpdateWithoutStudentInputSchema: z.ZodType<Prisma.Pe
   permitCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originalCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  validityPeriod: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  expiryDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   amountPaid: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
-  issuedById: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  issuedById: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();
@@ -3566,9 +3662,10 @@ export const PermitUncheckedUpdateManyWithoutStudentInputSchema: z.ZodType<Prism
   permitCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   originalCode: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
   status: z.union([ z.string(),z.lazy(() => StringFieldUpdateOperationsInputSchema) ]).optional(),
-  validityPeriod: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  startDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
+  expiryDate: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   amountPaid: z.union([ z.number(),z.lazy(() => FloatFieldUpdateOperationsInputSchema) ]).optional(),
-  issuedById: z.union([ z.number().int(),z.lazy(() => IntFieldUpdateOperationsInputSchema) ]).optional(),
+  issuedById: z.union([ z.number().int(),z.lazy(() => NullableIntFieldUpdateOperationsInputSchema) ]).optional().nullable(),
   createdAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
   updatedAt: z.union([ z.coerce.date(),z.lazy(() => DateTimeFieldUpdateOperationsInputSchema) ]).optional(),
 }).strict();

@@ -17,21 +17,21 @@ export const navigationData = {
         {
             title: "Permits",
             url: "/permits",
-            icon: FileCheck,
-            items: [
-                {
-                    title: "All Permits",
-                    url: "/permits"
-                },
-                {
-                    title: "Create Permit",
-                    url: "/permits/create"
-                },
-                {
-                    title: "Expiring Soon",
-                    url: "/permits/expiring"
-                }
-            ]
+            icon: FileCheck
+            // items: [
+            //     {
+            //         title: "All Permits",
+            //         url: "/permits"
+            //     },
+            //     {
+            //         title: "Create Permit",
+            //         url: "/permits/create"
+            //     },
+            //     {
+            //         title: "Expiring Soon",
+            //         url: "/permits/expiring"
+            //     }
+            // ]
         },
         {
             title: "Students",

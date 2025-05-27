@@ -1,7 +1,15 @@
 import { ipcMain } from 'electron';
 import { PermitService, PermitData } from '../components/lib/services/permit.service';
 
-
+// Get all permits with pagination
+ipcMain.handle('permit:get-all', async (_, params: { page?: number; pageSize?: number; search?: string; status?: string }) => {
+    try {
+        const response = await PermitService.getPermits(params);
+        return response;
+    } catch (error: any) {
+        return { success: false, error: error.message };
+    }
+});
 
 // Create permit
 ipcMain.handle('permit:create', async (_, permitData: PermitData) => {

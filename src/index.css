@@ -91,8 +91,12 @@
     }
 
     body {
-        @apply font-sans antialiased bg-background text-foreground;
+        @apply bg-background font-sans text-foreground antialiased;
     }
+}
+
+.rounded-sm {
+    border-radius: calc(var(--radius) - 4px);
 }
 
 .rounded-md {

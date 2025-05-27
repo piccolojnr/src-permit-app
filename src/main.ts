@@ -6,6 +6,9 @@ declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
 declare const MAIN_WINDOW_VITE_NAME: string;
 
 
+
+
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
     app.quit()
@@ -21,6 +24,7 @@ const createWindow = async () => {
             preload: path.join(__dirname, "preload.js")
         }
     })
+    mainWindow.maximize()
 
     // and load the index.html of the app.
     if (MAIN_WINDOW_VITE_DEV_SERVER_URL) {
@@ -67,3 +71,4 @@ import("./ipc/user")
 import("./ipc/role")
 import("./ipc/permission")
 import("./ipc/audit")
+import("./ipc/dashboard")

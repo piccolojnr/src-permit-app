@@ -20,13 +20,7 @@ interface StudentData {
     number: string;
 }
 
-interface PermitData {
-    studentId: number;
-    amountPaid: number;
-    validityPeriod: number;
-    issuedById: number;
-}
-
+i
 interface RoleData {
     name: string;
     description?: string;
@@ -74,6 +68,13 @@ interface AuditLogWithUser extends AuditLog {
             name: string;
         };
     };
+}
+
+interface PermitData {
+    studentId: string;
+    amountPaid: number;
+    expiryDate: Date;
+    issuedById: number;
 }
 
 declare global {
@@ -132,6 +133,25 @@ declare global {
                 }>;
             };
             permit: {
+                getAll: (params: { page?: number; pageSize?: number; search?: string; status?: string }) => Promise<{
+                    success: boolean;
+                    data?: {
+                        data: (Permit & {
+                            student: {
+                                name: string;
+                                studentId: string;
+                            };
+                            issuedBy?: {
+                                username: string;
+                            };
+                        })[];
+                        total: number;
+                        page: number;
+                        pageSize: number;
+                        totalPages: number;
+                    };
+                    error?: string;
+                }>;
                 create: (permitData: PermitData) => Promise<{ success: boolean; permitCode?: string; qrCode?: string; error?: string }>;
                 verify: (permitCode: string) => Promise<{
                     success: boolean; data?: {
@@ -187,6 +207,18 @@ declare global {
                 getByAction: (action: string) => Promise<{ success: boolean; log?: AuditLogWithUser[]; error?: string }>;
                 getAll: () => Promise<{ success: boolean; log?: AuditLogWithUser[]; error?: string }>;
                 getByDateRange: (startDate: Date, endDate: Date) => Promise<{ success: boolean; log?: AuditLogWithUser[]; error?: string }>;
+            };
+            dashboard: {
+                getStats: () => Promise<{
+                    success: boolean;
+                    data?: {
+                        totalStudents: number;
+                        activePermits: number;
+                        expiringSoon: number;
+                        totalRevenue: number;
+                    };
+                    error?: string;
+                }>;
             };
         };
     }

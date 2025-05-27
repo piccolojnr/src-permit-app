@@ -1,11 +1,20 @@
 import { Student } from "@prisma/client"
 import { format } from "date-fns"
-import { FileUp, Plus, Search, Trash2 } from "lucide-react"
+import { Menu } from "electron"
+import { FileUp, MenuIcon, Pencil, Plus, Search, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "@/components/hooks/use-toast"
 import { Button } from "@/components/shadcn/ui/button"
 import { Card, CardContent } from "@/components/shadcn/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/ui/dialog"
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuTrigger
+} from "@/components/shadcn/ui/dropdown-menu"
 import { Input } from "@/components/shadcn/ui/input"
 import { Label } from "@/components/shadcn/ui/label"
 import {
@@ -18,12 +27,15 @@ import {
     PaginationPrevious
 } from "@/components/shadcn/ui/pagination"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/ui/table"
+import CreatePermitForm from "./permit/create-permit-form"
 
 export function Students() {
     const [students, setStudents] = useState<Student[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [isPermitDialogOpen, setIsPermitDialogOpen] = useState(false)
     const [selectedStudent, setSelectedStudent] = useState<Student | null>(null)
+    const [selectedStudentForPermit, setSelectedStudentForPermit] = useState<Student | null>(null)
     const [searchQuery, setSearchQuery] = useState("")
     const [currentPage, setCurrentPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
@@ -284,14 +296,35 @@ export function Students() {
                                     <TableCell>{student.number}</TableCell>
                                     <TableCell>{format(new Date(student.createdAt), "MMM d, yyyy")}</TableCell>
                                     <TableCell>
-                                        <div className="flex space-x-2">
-                                            <Button variant="outline" size="sm" onClick={() => openEditDialog(student)}>
-                                                Edit
-                                            </Button>
-                                            <Button variant="destructive" size="sm" onClick={() => handleDelete(student.id)}>
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
-                                        </div>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <Button variant="outline" size="sm">
+                                                    <MenuIcon className="w-4 h-4" />
+                                                </Button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent>
+                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                <DropdownMenuSeparator />
+                                                <DropdownMenuItem onClick={() => openEditDialog(student)}>
+                                                    <Pencil className="w-4 h-4 mr-2" /> Edit
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem onClick={() => handleDelete(student.id)} className="text-red-600">
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem>
+                                                    <Button
+                                                        onClick={() => {
+                                                            setSelectedStudentForPermit(student)
+                                                            setIsPermitDialogOpen(true)
+                                                        }}
+                                                    >
+                                                        <Plus className="w-4 h-4 mr-2" />
+                                                        New Permit
+                                                    </Button>
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
                                     </TableCell>
                                 </TableRow>
                             ))}
@@ -299,7 +332,21 @@ export function Students() {
                     </Table>
                 </CardContent>
             </Card>
-
+            <Dialog open={isPermitDialogOpen} onOpenChange={setIsPermitDialogOpen}>
+                <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Create New Permit</DialogTitle>
+                        <DialogDescription>Create a new permit for a student</DialogDescription>
+                    </DialogHeader>
+                    <CreatePermitForm
+                        onSuccess={() => {
+                            setIsPermitDialogOpen(false)
+                        }}
+                        setIsDialogOpen={setIsPermitDialogOpen}
+                        studentId={selectedStudentForPermit?.studentId || ""}
+                    />
+                </DialogContent>
+            </Dialog>
             <Pagination>
                 <PaginationContent>
                     <PaginationItem>

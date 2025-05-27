@@ -45,6 +45,8 @@ contextBridge.exposeInMainWorld('api', {
     },
 
     permit: {
+        getAll: (params: { page?: number; pageSize?: number; search?: string; status?: string }) =>
+            ipcRenderer.invoke('permit:get-all', params),
         create: (permitData: any) =>
             ipcRenderer.invoke('permit:create', permitData),
         verify: (permitCode: string) =>
@@ -96,5 +98,9 @@ contextBridge.exposeInMainWorld('api', {
             ipcRenderer.invoke('audit:get-all'),
         getByDateRange: (startDate: Date, endDate: Date) =>
             ipcRenderer.invoke('audit:get-by-date-range', startDate, endDate),
-    }
+    },
+
+    dashboard: {
+        getStats: () => ipcRenderer.invoke('dashboard:get-stats'),
+    },
 });

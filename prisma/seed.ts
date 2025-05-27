@@ -123,7 +123,12 @@ async function main() {
     console.log('Creating admin user...');
     await prisma.user.upsert({
         where: { username: 'admin' },
-        update: {},
+        update: {
+            email: 'admin@example.com',
+            username: 'admin',
+            password: hashedPassword,
+            roleId: adminRole.id,
+        },
         create: {
             username: 'admin',
             email: 'admin@example.com',
@@ -138,7 +143,6 @@ async function main() {
 main()
     .catch((e) => {
         console.error('Error during seed:', e);
-        process.exit(1);
     })
     .finally(async () => {
         await prisma.$disconnect();
