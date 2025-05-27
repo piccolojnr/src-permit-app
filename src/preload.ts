@@ -103,4 +103,18 @@ contextBridge.exposeInMainWorld('api', {
     dashboard: {
         getStats: () => ipcRenderer.invoke('dashboard:get-stats'),
     },
+
+    email: {
+        send: (emailOptions: {
+            to: string; subject: string; text: string; html: string,
+            attachments?: {
+                filename: string;
+                content: Buffer | string;
+                encoding?: string;
+                cid?: string;
+            }[];
+        }
+        ) =>
+            ipcRenderer.invoke('email:send', emailOptions),
+    }
 });

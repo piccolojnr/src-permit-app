@@ -10,18 +10,7 @@ export interface LoginCredentials {
 }
 
 export interface AuthResponse {
-    user: {
-        id: number;
-        username: string;
-        email: string;
-        role: {
-            id: number;
-            name: string;
-            permissions: {
-                name: string;
-            }[];
-        };
-    };
+    user: any;
     token: string;
 }
 
@@ -71,18 +60,7 @@ export class AuthService {
         );
 
         return {
-            user: {
-                id: user.id,
-                username: user.username,
-                email: user.email,
-                role: {
-                    id: user.role.id,
-                    name: user.role.name,
-                    permissions: user.role.permissions.map(rp => ({
-                        name: rp.permission.name
-                    }))
-                }
-            },
+            user,
             token
         };
     }

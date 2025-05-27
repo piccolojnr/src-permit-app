@@ -1,7 +1,9 @@
 import { prisma } from '../prisma/client';
 import bcrypt from 'bcryptjs';
 import QRCode from 'qrcode';
-import { Prisma, Permit } from '@prisma/client';
+import { Prisma, Permit, Student } from '@prisma/client';
+import { BASE_URL } from '../constants';
+
 
 export interface PermitData {
     studentId: string;
@@ -20,17 +22,29 @@ export interface PaginatedResponse<T> {
 
 export interface PermitResponse {
     success: boolean;
+    data?: Permit & {
+        student: Student;
+        issuedBy: {
+            username: string;
+        } | null;
+    };
     permitCode?: string;
     qrCode?: string;
     error?: string;
 }
 
 export class PermitService {
-    static async getPermits(params: { page?: number; pageSize?: number; search?: string; status?: string }): Promise<{ success: boolean; data?: PaginatedResponse<Permit & { student: { name: string; studentId: string }; issuedBy: { username: string } }>; error?: string }> {
+    static async getPermits(params: { page?: number; pageSize?: number; search?: string; status?: string }): Promise<{
+        success: boolean;
+
+        data?: PaginatedResponse<Permit & { student: { name: string; studentId: string }; issuedBy: { username: string } | null }>; error?: string
+    }> {
         try {
             const { page = 1, pageSize = 10, search, status } = params;
             const where: Prisma.PermitWhereInput = {
-                ...(status && { status }),
+                ...(status &&
+                    status !== 'all' &&
+                    { status }),
                 ...(search && {
                     OR: [
                         { originalCode: { contains: search } },
@@ -63,6 +77,8 @@ export class PermitService {
                     orderBy: { createdAt: 'desc' }
                 })
             ]);
+
+
 
             return {
                 success: true,
@@ -104,16 +120,22 @@ export class PermitService {
                     status: 'active'
                 },
                 include: {
-                    student: true
+                    student: true,
+                    issuedBy: {
+                        select: {
+                            username: true
+                        }
+                    }
                 }
             });
 
             // Generate QR Code
-            const verificationUrl = `http://localhost:3000/verify.html?code=${permitCode}`;
+            const verificationUrl = `${BASE_URL}/verify.html?code=${permitCode}`;
             const qrCode = await QRCode.toDataURL(verificationUrl);
 
             return {
                 success: true,
+                data: permit,
                 permitCode,
                 qrCode
             };

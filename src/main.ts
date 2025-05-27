@@ -19,6 +19,7 @@ const createWindow = async () => {
     const mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
+        icon: path.join(__dirname, 'assets', 'knutsford_logo.png'), // or .ico on Windows
         webPreferences: {
             // contextIsolation: true,
             preload: path.join(__dirname, "preload.js")
@@ -72,3 +73,4 @@ import("./ipc/role")
 import("./ipc/permission")
 import("./ipc/audit")
 import("./ipc/dashboard")
+import("./ipc/email")

@@ -1,5 +1,3 @@
-"use client"
-
 import { User } from "@prisma/client"
 import { BadgeCheck, Bell, ChevronsUpDown, CreditCard, LogOut, Sparkles } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/shadcn/ui/avatar"

@@ -1,6 +1,7 @@
 import { format } from "date-fns"
 import { Users, FileCheck, AlertCircle, DollarSign, TrendingUp, Calendar, Clock, BarChart3 } from "lucide-react"
 import { useEffect, useState } from "react"
+import { Link } from "react-router"
 import { usePermissions } from "@/components/hooks/use-permissions"
 import { toast } from "@/components/hooks/use-toast"
 import { DashboardStats } from "@/components/lib/services/dashboard.service"
@@ -153,23 +154,29 @@ export function Dashboard() {
                     </CardHeader>
                     <CardContent>
                         <div className="grid grid-cols-2 gap-4">
-                            <Button variant="outline" className="h-auto py-4" onClick={() => (window.location.href = "/permits")}>
-                                <div className="flex flex-col items-center gap-2">
-                                    <FileCheck className="w-6 h-6" />
-                                    <span>Manage Permits</span>
-                                </div>
+                            <Button variant="outline" className="h-auto py-4" asChild>
+                                <Link to="/permits">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <FileCheck className="w-6 h-6" />
+                                        <span>Manage Permits</span>
+                                    </div>
+                                </Link>
                             </Button>
-                            <Button variant="outline" className="h-auto py-4" onClick={() => (window.location.href = "/students")}>
-                                <div className="flex flex-col items-center gap-2">
-                                    <Users className="w-6 h-6" />
-                                    <span>View Students</span>
-                                </div>
+                            <Button variant="outline" className="h-auto py-4" asChild>
+                                <Link to="/students">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <Users className="w-6 h-6" />
+                                        <span>View Students</span>
+                                    </div>
+                                </Link>
                             </Button>
-                            <Button variant="outline" className="h-auto py-4" onClick={() => (window.location.href = "/reports")}>
-                                <div className="flex flex-col items-center gap-2">
-                                    <BarChart3 className="w-6 h-6" />
-                                    <span>View Reports</span>
-                                </div>
+                            <Button variant="outline" className="h-auto py-4" asChild>
+                                <Link to="/settings/reports">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <BarChart3 className="w-6 h-6" />
+                                        <span>View Reports</span>
+                                    </div>
+                                </Link>
                             </Button>
                             <Button variant="outline" className="h-auto py-4" onClick={() => (window.location.href = "/settings")}>
                                 <div className="flex flex-col items-center gap-2">

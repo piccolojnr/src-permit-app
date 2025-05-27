@@ -1,13 +1,13 @@
-"use client"
-
 import { zodResolver } from "@hookform/resolvers/zod"
 import { format } from "date-fns"
 import { AlertCircle, CalendarIcon } from "lucide-react"
 import { useState } from "react"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { usePermitCreation } from "@/components/hooks/use-permit-creation"
 import { toast } from "@/components/hooks/use-toast"
 import { useAuth } from "@/components/lib/auth/auth.context"
+import { permitFormSchema, PermitFormValues } from "@/components/lib/schemas/permit-schema"
 import { cn } from "@/components/lib/utils"
 import { Alert, AlertDescription } from "@/components/shadcn/ui/alert"
 import { Button } from "@/components/shadcn/ui/button"
@@ -16,38 +16,12 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from "@/components/shadcn/ui/input"
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/shadcn/ui/popover"
 
-// Form validation schema
-const formSchema = z.object({
-    studentId: z.string().min(1, "Student ID is required").regex(/^\d+$/, "Student ID must contain only numbers"),
-    amountPaid: z
-        .string()
-        .min(1, "Amount is required")
-        .refine(val => {
-            const num = Number.parseFloat(val)
-            return !isNaN(num) && num > 0
-        }, "Amount must be greater than $0"),
-    expiryDate: z
-        .date({
-            required_error: "Expiry date is required"
-        })
-        .refine(date => {
-            const today = new Date()
-            today.setHours(0, 0, 0, 0)
-            return date >= today
-        }, "Expiry date cannot be in the past")
-})
-
-type FormValues = z.infer<typeof formSchema>
-
 interface CreatePermitFormProps {
     setIsDialogOpen: (isOpen: boolean) => void
     onSuccess: () => void
     studentId?: string
 }
 
-// Mock user context - replace with your actual auth context
-
-// Get tomorrow's date as default
 const getTomorrowDate = (): Date => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
@@ -57,9 +31,10 @@ const getTomorrowDate = (): Date => {
 export default function CreatePermitForm({ setIsDialogOpen, onSuccess, studentId }: CreatePermitFormProps) {
     const { user } = useAuth()
     const [isSubmitting, setIsSubmitting] = useState(false)
+    const { createPermit } = usePermitCreation()
 
-    const form = useForm<FormValues>({
-        resolver: zodResolver(formSchema),
+    const form = useForm<PermitFormValues>({
+        resolver: zodResolver(permitFormSchema),
         defaultValues: {
             studentId: studentId || "",
             amountPaid: "",
@@ -67,7 +42,7 @@ export default function CreatePermitForm({ setIsDialogOpen, onSuccess, studentId
         }
     })
 
-    const onSubmit = async (values: FormValues) => {
+    const onSubmit = async (values: PermitFormValues) => {
         if (!user?.id) {
             toast({
                 title: "Authentication Error",
@@ -80,44 +55,22 @@ export default function CreatePermitForm({ setIsDialogOpen, onSuccess, studentId
         setIsSubmitting(true)
 
         try {
-            // Simulate API call - replace with your actual API
-            const createPermitData = {
-                studentId: values.studentId,
+            await createPermit({
+                ...values,
                 amountPaid: Number.parseFloat(values.amountPaid),
-                expiryDate: values.expiryDate,
                 issuedById: user.id
-            }
+            })
 
-            // Mock API call
-            const response = await window.api.permit.create(createPermitData)
+            form.reset({
+                studentId: "",
+                amountPaid: "",
+                expiryDate: getTomorrowDate()
+            })
 
-            // Simulate random success/failure for demo
-
-            if (response.success) {
-                toast({
-                    title: "Success",
-                    description: "Permit created successfully"
-                })
-
-                form.reset({
-                    studentId: "",
-                    amountPaid: "",
-                    expiryDate: getTomorrowDate()
-                })
-
-                setIsDialogOpen(false)
-                onSuccess()
-            } else {
-                throw new Error("Failed to create permit")
-            }
+            setIsDialogOpen(false)
+            onSuccess()
         } catch (error) {
             console.error("Error creating permit:", error)
-
-            toast({
-                title: "Error",
-                description: error instanceof Error ? error.message : "Failed to create permit. Please try again.",
-                variant: "destructive"
-            })
         } finally {
             setIsSubmitting(false)
         }
@@ -137,7 +90,6 @@ export default function CreatePermitForm({ setIsDialogOpen, onSuccess, studentId
             <Form {...form}>
                 <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                     <div className="space-y-4">
-                        {/* Student ID Field */}
                         <FormField
                             control={form.control}
                             name="studentId"
@@ -153,13 +105,12 @@ export default function CreatePermitForm({ setIsDialogOpen, onSuccess, studentId
                             )}
                         />
 
-                        {/* Amount Paid Field */}
                         <FormField
                             control={form.control}
                             name="amountPaid"
                             render={({ field }) => (
                                 <FormItem>
-                                    <FormLabel>Amount Paid ($) *</FormLabel>
+                                    <FormLabel>Amount Paid (GHS) *</FormLabel>
                                     <FormControl>
                                         <Input type="number" step="0.01" min="0.01" placeholder="0.00" disabled={isSubmitting} {...field} />
                                     </FormControl>
@@ -168,8 +119,6 @@ export default function CreatePermitForm({ setIsDialogOpen, onSuccess, studentId
                                 </FormItem>
                             )}
                         />
-
-                        {/* Expiry Date Field */}
                         <FormField
                             control={form.control}
                             name="expiryDate"

@@ -77,7 +77,7 @@ model Permit {
   startDate    DateTime @default(now())
   expiryDate   DateTime
   amountPaid   Float
-  student      Student  @relation(fields: [studentId], references: [id])
+  student      Student  @relation(fields: [studentId], references: [id], onDelete: Cascade)
   studentId    Int
   issuedBy     User?    @relation(fields: [issuedById], references: [id])
   issuedById   Int?

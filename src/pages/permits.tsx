@@ -11,6 +11,7 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/ui/table"
 import CreatePermitForm from "./permit/create-permit-form"
+import { usePermissions } from "@/components/hooks/use-permissions"
 
 type SafePermit = Permit & {
     student: {
@@ -21,7 +22,9 @@ type SafePermit = Permit & {
         username: string
     }
 }
+
 export function Permits() {
+    const permissions = usePermissions()
     const [permits, setPermits] = useState<SafePermit[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -67,6 +70,15 @@ export function Permits() {
     }
 
     const handleRevoke = async (permitId: number) => {
+        if (!permissions.canRevokePermits()) {
+            toast({
+                title: "Permission Denied",
+                description: "You don't have permission to revoke permits",
+                variant: "destructive"
+            })
+            return
+        }
+
         if (!confirm("Are you sure you want to revoke this permit?")) return
 
         try {
@@ -93,6 +105,17 @@ export function Permits() {
         }
     }
 
+    const isExpired = (expiryDate: Date): boolean => {
+        const now = new Date()
+        const isExpired = now > expiryDate
+        const daysRemaining = Math.max(0, Math.ceil((expiryDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)))
+
+        if (isExpired) {
+            return true
+        }
+        return false
+    }
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -113,21 +136,23 @@ export function Permits() {
                             <SelectItem value="expired">Expired</SelectItem>
                         </SelectContent>
                     </Select>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button>
-                                <Plus className="w-4 h-4 mr-2" />
-                                New Permit
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Create New Permit</DialogTitle>
-                                <DialogDescription>Create a new permit for a student</DialogDescription>
-                            </DialogHeader>
-                            <CreatePermitForm onSuccess={loadPermits} setIsDialogOpen={setIsDialogOpen} />
-                        </DialogContent>
-                    </Dialog>
+                    {permissions.canCreatePermits() && (
+                        <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                            <DialogTrigger asChild>
+                                <Button>
+                                    <Plus className="w-4 h-4 mr-2" />
+                                    New Permit
+                                </Button>
+                            </DialogTrigger>
+                            <DialogContent>
+                                <DialogHeader>
+                                    <DialogTitle>Create New Permit</DialogTitle>
+                                    <DialogDescription>Create a new permit for a student</DialogDescription>
+                                </DialogHeader>
+                                <CreatePermitForm onSuccess={loadPermits} setIsDialogOpen={setIsDialogOpen} />
+                            </DialogContent>
+                        </Dialog>
+                    )}
                 </div>
             </div>
 
@@ -143,42 +168,48 @@ export function Permits() {
                                 <TableHead>Expiry Date</TableHead>
                                 <TableHead>Amount Paid</TableHead>
                                 <TableHead>Issued By</TableHead>
-                                <TableHead>Actions</TableHead>
+                                {permissions.canRevokePermits() && <TableHead>Actions</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
-                            {permits.map(permit => (
-                                <TableRow key={permit.id}>
-                                    <TableCell className="font-medium">{permit.originalCode}</TableCell>
-                                    <TableCell>
-                                        {permit.student.name} ({permit.student.studentId})
-                                    </TableCell>
-                                    <TableCell>
-                                        <span
-                                            className={`px-2 py-1 rounded-full text-xs ${
-                                                permit.status === "active"
-                                                    ? "bg-green-100 text-green-800"
-                                                    : permit.status === "revoked"
-                                                      ? "bg-red-100 text-red-800"
-                                                      : "bg-yellow-100 text-yellow-800"
-                                            }`}
-                                        >
-                                            {permit.status}
-                                        </span>
-                                    </TableCell>
-                                    <TableCell>{format(new Date(permit.startDate), "MMM d, yyyy")}</TableCell>
-                                    <TableCell>{format(new Date(permit.expiryDate), "MMM d, yyyy")}</TableCell>
-                                    <TableCell>${permit.amountPaid.toFixed(2)}</TableCell>
-                                    <TableCell>{permit.issuedBy?.username || "Unknown"}</TableCell>
-                                    <TableCell>
-                                        {permit.status === "active" && (
-                                            <Button variant="destructive" size="sm" onClick={() => handleRevoke(permit.id)}>
-                                                <Trash2 className="w-4 h-4" />
-                                            </Button>
+                            {permits.map(permit => {
+                                const isPermitExpired = isExpired(permit.expiryDate)
+                                const status = isPermitExpired ? "expired" : permit.status
+                                return (
+                                    <TableRow key={permit.id}>
+                                        <TableCell className="font-medium">{permit.originalCode}</TableCell>
+                                        <TableCell>
+                                            {permit.student.name} ({permit.student.studentId})
+                                        </TableCell>
+                                        <TableCell>
+                                            <span
+                                                className={`px-2 py-1 rounded-full text-xs ${
+                                                    permit.status === "active"
+                                                        ? "bg-green-100 text-green-800"
+                                                        : permit.status === "revoked"
+                                                          ? "bg-red-100 text-red-800"
+                                                          : "bg-yellow-100 text-yellow-800"
+                                                }`}
+                                            >
+                                                {permit.status}
+                                            </span>
+                                        </TableCell>
+                                        <TableCell>{format(new Date(permit.startDate), "MMM d, yyyy")}</TableCell>
+                                        <TableCell>{format(new Date(permit.expiryDate), "MMM d, yyyy")}</TableCell>
+                                        <TableCell>${permit.amountPaid.toFixed(2)}</TableCell>
+                                        <TableCell>{permit.issuedBy?.username || "Unknown"}</TableCell>
+                                        {permissions.canRevokePermits() && (
+                                            <TableCell>
+                                                {permit.status === "active" && (
+                                                    <Button variant="destructive" size="sm" onClick={() => handleRevoke(permit.id)}>
+                                                        <Trash2 className="w-4 h-4" />
+                                                    </Button>
+                                                )}
+                                            </TableCell>
                                         )}
-                                    </TableCell>
-                                </TableRow>
-                            ))}
+                                    </TableRow>
+                                )
+                            })}
                         </TableBody>
                     </Table>
                 </CardContent>

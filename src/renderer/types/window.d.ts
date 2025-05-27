@@ -1,7 +1,6 @@
 // src/renderer/types/window.d.ts
 
 import { Permit, Student, Role, Permission, AuditLog } from '@prisma/client';
-import type { User } from '../types/user';
 
 interface JWT_Response {
     userId: number,
@@ -152,7 +151,16 @@ declare global {
                     };
                     error?: string;
                 }>;
-                create: (permitData: PermitData) => Promise<{ success: boolean; permitCode?: string; qrCode?: string; error?: string }>;
+                create: (permitData: PermitData) => Promise<{
+                    success: boolean;
+                    data?: Permit & {
+                        student: Student;
+                        issuedBy: {
+                            username: string;
+                        } | null;
+                    }
+                    permitCode?: string; qrCode?: string; error?: string
+                }>;
                 verify: (permitCode: string) => Promise<{
                     success: boolean; data?: {
                         valid: boolean; permit?: Permit & {
@@ -219,6 +227,17 @@ declare global {
                     };
                     error?: string;
                 }>;
+            };
+            email: {
+                send: (emailOptions: {
+                    to: string; subject: string; text: string; html: string,
+                    attachments?: {
+                        filename: string;
+                        content: Buffer | string;
+                        encoding?: string;
+                        cid?: string;
+                    }[];
+                }) => Promise<{ success: boolean; data?: any; error?: string }>;
             };
         };
     }

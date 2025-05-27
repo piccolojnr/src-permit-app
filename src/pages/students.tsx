@@ -1,6 +1,5 @@
 import { Student } from "@prisma/client"
 import { format } from "date-fns"
-import { Menu } from "electron"
 import { FileUp, MenuIcon, Pencil, Plus, Search, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
 import { toast } from "@/components/hooks/use-toast"
@@ -20,7 +19,6 @@ import { Label } from "@/components/shadcn/ui/label"
 import {
     Pagination,
     PaginationContent,
-    PaginationEllipsis,
     PaginationItem,
     PaginationLink,
     PaginationNext,
@@ -28,8 +26,10 @@ import {
 } from "@/components/shadcn/ui/pagination"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/ui/table"
 import CreatePermitForm from "./permit/create-permit-form"
+import { usePermissions } from "@/components/hooks/use-permissions"
 
 export function Students() {
+    const permissions = usePermissions()
     const [students, setStudents] = useState<Student[]>([])
     const [isLoading, setIsLoading] = useState(true)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -85,6 +85,15 @@ export function Students() {
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
+        if (!permissions.canManageStudents()) {
+            toast({
+                title: "Permission Denied",
+                description: "You don't have permission to manage students",
+                variant: "destructive"
+            })
+            return
+        }
+
         try {
             const response = selectedStudent ? await window.api.student.update(selectedStudent.id, formData) : await window.api.student.create(formData)
 
@@ -112,6 +121,15 @@ export function Students() {
     }
 
     const handleDelete = async (studentId: number) => {
+        if (!permissions.canManageStudents()) {
+            toast({
+                title: "Permission Denied",
+                description: "You don't have permission to manage students",
+                variant: "destructive"
+            })
+            return
+        }
+
         if (!confirm("Are you sure you want to delete this student?")) return
 
         try {
@@ -139,6 +157,15 @@ export function Students() {
     }
 
     const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+        if (!permissions.canManageStudents()) {
+            toast({
+                title: "Permission Denied",
+                description: "You don't have permission to manage students",
+                variant: "destructive"
+            })
+            return
+        }
+
         const file = e.target.files?.[0]
         if (!file) return
 
@@ -172,6 +199,15 @@ export function Students() {
     }
 
     const openEditDialog = (student: Student) => {
+        if (!permissions.canManageStudents()) {
+            toast({
+                title: "Permission Denied",
+                description: "You don't have permission to manage students",
+                variant: "destructive"
+            })
+            return
+        }
+
         setSelectedStudent(student)
         setFormData({
             studentId: student.studentId,
@@ -185,6 +221,15 @@ export function Students() {
     }
 
     const openCreateDialog = () => {
+        if (!permissions.canManageStudents()) {
+            toast({
+                title: "Permission Denied",
+                description: "You don't have permission to manage students",
+                variant: "destructive"
+            })
+            return
+        }
+
         setSelectedStudent(null)
         setFormData({
             studentId: "",
@@ -206,67 +251,71 @@ export function Students() {
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
                         <Input placeholder="Search students..." className="pl-8" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
                     </div>
-                    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                        <DialogTrigger asChild>
-                            <Button onClick={openCreateDialog}>
-                                <Plus className="w-4 h-4 mr-2" />
-                                Add Student
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>{selectedStudent ? "Edit Student" : "Add Student"}</DialogTitle>
-                                <DialogDescription>{selectedStudent ? "Update student information" : "Add a new student to the system"}</DialogDescription>
-                            </DialogHeader>
-                            <form onSubmit={handleSubmit} className="space-y-4">
-                                <div className="space-y-2">
-                                    <Label htmlFor="studentId">Student ID</Label>
-                                    <Input
-                                        id="studentId"
-                                        value={formData.studentId}
-                                        onChange={e => setFormData({ ...formData, studentId: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="name">Name</Label>
-                                    <Input id="name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="email">Email</Label>
-                                    <Input
-                                        id="email"
-                                        type="email"
-                                        value={formData.email}
-                                        onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                        required
-                                    />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="course">Course</Label>
-                                    <Input id="course" value={formData.course} onChange={e => setFormData({ ...formData, course: e.target.value })} required />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="level">Level</Label>
-                                    <Input id="level" value={formData.level} onChange={e => setFormData({ ...formData, level: e.target.value })} required />
-                                </div>
-                                <div className="space-y-2">
-                                    <Label htmlFor="number">Phone Number</Label>
-                                    <Input id="number" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} required />
-                                </div>
-                                <DialogFooter>
-                                    <Button type="submit">{selectedStudent ? "Update Student" : "Add Student"}</Button>
-                                </DialogFooter>
-                            </form>
-                        </DialogContent>
-                    </Dialog>
-                    <div className="relative">
-                        <Input type="file" accept=".csv" className="hidden" id="import-file" onChange={handleImport} />
-                        <Button variant="outline" onClick={() => document.getElementById("import-file")?.click()}>
-                            <FileUp className="w-4 h-4 mr-2" />
-                            Import
-                        </Button>
-                    </div>
+                    {permissions.canManageStudents() && (
+                        <>
+                            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+                                <DialogTrigger asChild>
+                                    <Button onClick={openCreateDialog}>
+                                        <Plus className="w-4 h-4 mr-2" />
+                                        Add Student
+                                    </Button>
+                                </DialogTrigger>
+                                <DialogContent>
+                                    <DialogHeader>
+                                        <DialogTitle>{selectedStudent ? "Edit Student" : "Add Student"}</DialogTitle>
+                                        <DialogDescription>{selectedStudent ? "Update student information" : "Add a new student to the system"}</DialogDescription>
+                                    </DialogHeader>
+                                    <form onSubmit={handleSubmit} className="space-y-4">
+                                        <div className="space-y-2">
+                                            <Label htmlFor="studentId">Student ID</Label>
+                                            <Input
+                                                id="studentId"
+                                                value={formData.studentId}
+                                                onChange={e => setFormData({ ...formData, studentId: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="name">Name</Label>
+                                            <Input id="name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="email">Email</Label>
+                                            <Input
+                                                id="email"
+                                                type="email"
+                                                value={formData.email}
+                                                onChange={e => setFormData({ ...formData, email: e.target.value })}
+                                                required
+                                            />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="course">Course</Label>
+                                            <Input id="course" value={formData.course} onChange={e => setFormData({ ...formData, course: e.target.value })} required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="level">Level</Label>
+                                            <Input id="level" value={formData.level} onChange={e => setFormData({ ...formData, level: e.target.value })} required />
+                                        </div>
+                                        <div className="space-y-2">
+                                            <Label htmlFor="number">Phone Number</Label>
+                                            <Input id="number" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} required />
+                                        </div>
+                                        <DialogFooter>
+                                            <Button type="submit">{selectedStudent ? "Update Student" : "Add Student"}</Button>
+                                        </DialogFooter>
+                                    </form>
+                                </DialogContent>
+                            </Dialog>
+                            <div className="relative">
+                                <Input type="file" accept=".csv" className="hidden" id="import-file" onChange={handleImport} />
+                                <Button variant="outline" onClick={() => document.getElementById("import-file")?.click()}>
+                                    <FileUp className="w-4 h-4 mr-2" />
+                                    Import
+                                </Button>
+                            </div>
+                        </>
+                    )}
                 </div>
             </div>
 
@@ -282,7 +331,7 @@ export function Students() {
                                 <TableHead>Level</TableHead>
                                 <TableHead>Phone</TableHead>
                                 <TableHead>Created At</TableHead>
-                                <TableHead>Actions</TableHead>
+                                {(permissions.canManageStudents() || permissions.canCreatePermits()) && <TableHead>Actions</TableHead>}
                             </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -295,58 +344,68 @@ export function Students() {
                                     <TableCell>{student.level}</TableCell>
                                     <TableCell>{student.number}</TableCell>
                                     <TableCell>{format(new Date(student.createdAt), "MMM d, yyyy")}</TableCell>
-                                    <TableCell>
-                                        <DropdownMenu>
-                                            <DropdownMenuTrigger asChild>
-                                                <Button variant="outline" size="sm">
-                                                    <MenuIcon className="w-4 h-4" />
-                                                </Button>
-                                            </DropdownMenuTrigger>
-                                            <DropdownMenuContent>
-                                                <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                <DropdownMenuSeparator />
-                                                <DropdownMenuItem onClick={() => openEditDialog(student)}>
-                                                    <Pencil className="w-4 h-4 mr-2" /> Edit
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem onClick={() => handleDelete(student.id)} className="text-red-600">
-                                                    <Trash2 className="w-4 h-4 mr-2" />
-                                                    Delete
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem>
-                                                    <Button
-                                                        onClick={() => {
-                                                            setSelectedStudentForPermit(student)
-                                                            setIsPermitDialogOpen(true)
-                                                        }}
-                                                    >
-                                                        <Plus className="w-4 h-4 mr-2" />
-                                                        New Permit
+                                    {(permissions.canManageStudents() || permissions.canCreatePermits()) && (
+                                        <TableCell>
+                                            <DropdownMenu>
+                                                <DropdownMenuTrigger asChild>
+                                                    <Button variant="outline" size="sm">
+                                                        <MenuIcon className="w-4 h-4" />
                                                     </Button>
-                                                </DropdownMenuItem>
-                                            </DropdownMenuContent>
-                                        </DropdownMenu>
-                                    </TableCell>
+                                                </DropdownMenuTrigger>
+                                                <DropdownMenuContent>
+                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                                                    <DropdownMenuSeparator />
+                                                    {permissions.canManageStudents() && (
+                                                        <>
+                                                            <DropdownMenuItem onClick={() => openEditDialog(student)}>
+                                                                <Pencil className="w-4 h-4 mr-2" /> Edit
+                                                            </DropdownMenuItem>
+                                                            <DropdownMenuItem onClick={() => handleDelete(student.id)} className="text-red-600">
+                                                                <Trash2 className="w-4 h-4 mr-2" />
+                                                                Delete
+                                                            </DropdownMenuItem>
+                                                        </>
+                                                    )}
+                                                    {permissions.canCreatePermits() && (
+                                                        <DropdownMenuItem>
+                                                            <Button
+                                                                onClick={() => {
+                                                                    setSelectedStudentForPermit(student)
+                                                                    setIsPermitDialogOpen(true)
+                                                                }}
+                                                            >
+                                                                <Plus className="w-4 h-4 mr-2" />
+                                                                New Permit
+                                                            </Button>
+                                                        </DropdownMenuItem>
+                                                    )}
+                                                </DropdownMenuContent>
+                                            </DropdownMenu>
+                                        </TableCell>
+                                    )}
                                 </TableRow>
                             ))}
                         </TableBody>
                     </Table>
                 </CardContent>
             </Card>
-            <Dialog open={isPermitDialogOpen} onOpenChange={setIsPermitDialogOpen}>
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Create New Permit</DialogTitle>
-                        <DialogDescription>Create a new permit for a student</DialogDescription>
-                    </DialogHeader>
-                    <CreatePermitForm
-                        onSuccess={() => {
-                            setIsPermitDialogOpen(false)
-                        }}
-                        setIsDialogOpen={setIsPermitDialogOpen}
-                        studentId={selectedStudentForPermit?.studentId || ""}
-                    />
-                </DialogContent>
-            </Dialog>
+            {permissions.canCreatePermits() && (
+                <Dialog open={isPermitDialogOpen} onOpenChange={setIsPermitDialogOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Create New Permit</DialogTitle>
+                            <DialogDescription>Create a new permit for a student</DialogDescription>
+                        </DialogHeader>
+                        <CreatePermitForm
+                            onSuccess={() => {
+                                setIsPermitDialogOpen(false)
+                            }}
+                            setIsDialogOpen={setIsPermitDialogOpen}
+                            studentId={selectedStudentForPermit?.studentId || ""}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
             <Pagination>
                 <PaginationContent>
                     <PaginationItem>

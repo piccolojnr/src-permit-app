@@ -59,6 +59,7 @@ async function main() {
                 'create_permits',
                 'view_permits',
                 'view_students',
+                'manage_settings',
                 'view_reports',
             ],
         },
@@ -67,6 +68,7 @@ async function main() {
             description: 'View-only access',
             permissions: [
                 'view_permits',
+                'manage_settings',
                 'view_students',
                 'view_reports',
             ],
