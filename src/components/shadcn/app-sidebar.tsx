@@ -1,137 +1,76 @@
-import { AudioWaveform, BookOpen, Bot, Command, Frame, GalleryVerticalEnd, Map, PieChart, Settings2, SquareTerminal } from "lucide-react"
+import { BarChart3, FileCheck, Settings2, Users, Shield, KeyRound } from "lucide-react"
 import * as React from "react"
 import { NavMain } from "@/components/shadcn/nav-main"
-import { NavProjects } from "@/components/shadcn/nav-projects"
 import { NavUser } from "@/components/shadcn/nav-user"
-import { TeamSwitcher } from "@/components/shadcn/team-switcher"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail } from "@/components/shadcn/ui/sidebar"
+import { useAuth } from "../lib/auth/auth.context"
 
 // This is sample data.
-const data = {
-    user: {
-        name: "shadcn",
-        email: "m@example.com",
-        avatar: "/avatars/shadcn.jpg"
-    },
-    teams: [
-        {
-            name: "Acme Inc",
-            logo: GalleryVerticalEnd,
-            plan: "Enterprise"
-        },
-        {
-            name: "Acme Corp.",
-            logo: AudioWaveform,
-            plan: "Startup"
-        },
-        {
-            name: "Evil Corp.",
-            logo: Command,
-            plan: "Free"
-        }
-    ],
+export const navigationData = {
     navMain: [
         {
-            title: "Playground",
-            url: "#",
-            icon: SquareTerminal,
-            isActive: true,
+            title: "Dashboard",
+            url: "/",
+            icon: BarChart3,
+            isActive: true
+        },
+        {
+            title: "Permits",
+            url: "/permits",
+            icon: FileCheck,
             items: [
                 {
-                    title: "History",
-                    url: "#"
+                    title: "All Permits",
+                    url: "/permits"
                 },
                 {
-                    title: "Starred",
-                    url: "#"
+                    title: "Create Permit",
+                    url: "/permits/create"
                 },
                 {
-                    title: "Settings",
-                    url: "#"
+                    title: "Expiring Soon",
+                    url: "/permits/expiring"
                 }
             ]
         },
         {
-            title: "Models",
-            url: "#",
-            icon: Bot,
-            items: [
-                {
-                    title: "Genesis",
-                    url: "#"
-                },
-                {
-                    title: "Explorer",
-                    url: "#"
-                },
-                {
-                    title: "Quantum",
-                    url: "#"
-                }
-            ]
+            title: "Students",
+            url: "/students",
+            icon: Users
         },
         {
-            title: "Documentation",
-            url: "#",
-            icon: BookOpen,
+            title: "Administration",
+            url: "/admin",
+            icon: Shield,
             items: [
                 {
-                    title: "Introduction",
-                    url: "#"
+                    title: "Users",
+                    url: "/admin/users"
                 },
                 {
-                    title: "Get Started",
-                    url: "#"
+                    title: "Roles",
+                    url: "/admin/roles"
                 },
                 {
-                    title: "Tutorials",
-                    url: "#"
-                },
-                {
-                    title: "Changelog",
-                    url: "#"
+                    title: "Permissions",
+                    url: "/admin/permissions"
                 }
             ]
         },
         {
             title: "Settings",
-            url: "#",
+            url: "/settings",
             icon: Settings2,
             items: [
                 {
                     title: "General",
-                    url: "#"
+                    url: "/settings"
                 },
                 {
-                    title: "Team",
-                    url: "#"
-                },
-                {
-                    title: "Billing",
-                    url: "#"
-                },
-                {
-                    title: "Limits",
-                    url: "#"
+                    title: "Database",
+                    url: "/settings/database"
                 }
             ]
-        }
-    ],
-    projects: [
-        {
-            name: "Design Engineering",
-            url: "#",
-            icon: Frame
-        },
-        {
-            name: "Sales & Marketing",
-            url: "#",
-            icon: PieChart
-        },
-        {
-            name: "Travel",
-            url: "#",
-            icon: Map
         }
     ]
 }
@@ -140,14 +79,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     return (
         <Sidebar collapsible="icon" {...props}>
             <SidebarHeader>
-                <TeamSwitcher teams={data.teams} />
+                <div className="flex items-center gap-2 px-4">
+                    <h1 className="text-lg font-semibold">Permit Manager</h1>
+                </div>
             </SidebarHeader>
             <SidebarContent>
-                <NavMain items={data.navMain} />
-                <NavProjects projects={data.projects} />
+                <NavMain items={navigationData.navMain} />
             </SidebarContent>
             <SidebarFooter>
-                <NavUser user={data.user} />
+                <NavUser />
             </SidebarFooter>
             <SidebarRail />
         </Sidebar>

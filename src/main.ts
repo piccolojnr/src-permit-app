@@ -2,6 +2,10 @@ import { app, BrowserWindow } from "electron"
 import started from "electron-squirrel-startup"
 import path from "node:path"
 
+declare const MAIN_WINDOW_VITE_DEV_SERVER_URL: string;
+declare const MAIN_WINDOW_VITE_NAME: string;
+
+
 // Handle creating/removing shortcuts on Windows when installing/uninstalling.
 if (started) {
     app.quit()
@@ -13,6 +17,7 @@ const createWindow = async () => {
         width: 800,
         height: 600,
         webPreferences: {
+            // contextIsolation: true,
             preload: path.join(__dirname, "preload.js")
         }
     })
@@ -52,3 +57,13 @@ app.on("activate", () => {
 
 // In this file you can include the rest of your app's specific main process
 // code. You can also put them in separate files and import them here.
+
+// Handle Prisma queries here   
+// at the bottom of your main.ts
+import("./ipc/auth")  // you're already doing this one
+import("./ipc/permit")
+import("./ipc/student")
+import("./ipc/user")
+import("./ipc/role")
+import("./ipc/permission")
+import("./ipc/audit")
