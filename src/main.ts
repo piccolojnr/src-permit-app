@@ -19,7 +19,7 @@ const createWindow = async () => {
     const mainWindow = new BrowserWindow({
         width: 800,
         height: 600,
-        icon: path.join(__dirname, 'assets', 'knutsford_logo.png'), // or .ico on Windows
+        icon: path.join(__dirname, 'assets', 'app-icon.ico'),
         webPreferences: {
             // contextIsolation: true,
             preload: path.join(__dirname, "preload.js")
@@ -35,7 +35,7 @@ const createWindow = async () => {
     }
 
     // Open the DevTools.
-    mainWindow.webContents.openDevTools()
+    // mainWindow.webContents.openDevTools()
 }
 
 // This method will be called when Electron has finished

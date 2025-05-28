@@ -10,6 +10,9 @@
         "make": "electron-forge make",
         "publish": "electron-forge publish",
         "lint": "eslint --ext .ts,.tsx .",
+        "db:init": "prisma migrate reset --force && prisma db push && prisma generate && ts-node prisma/seed.ts",
+        "prisma:generate": "prisma generate",
+        "prisma:migrate": "prisma migrate deploy",
         "prisma:seed": "ts-node prisma/seed.ts"
     },
     "prisma": {
