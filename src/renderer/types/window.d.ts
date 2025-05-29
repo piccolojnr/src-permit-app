@@ -99,17 +99,17 @@ declare global {
             };
             student: {
                 create: (studentData: StudentData) => Promise<{ success: boolean; data?: Student; error?: string }>;
-                getById: (studentId: number) => Promise<{
+                getById: (studentId: string) => Promise<{
                     success: boolean; data?: Student & {
-                        permits: {
+                        permits: (Permit & {
                             issuedBy: {
                                 username: string;
                             };
-                        }[];
+                        })[];
                     }; error?: string
                 }>;
-                update: (studentId: number, studentData: Partial<StudentData>) => Promise<{ success: boolean; data?: Student; error?: string }>;
-                delete: (studentId: number) => Promise<{ success: boolean; data?: { success: boolean }; error?: string }>;
+                update: (studentId: string, studentData: Partial<StudentData>) => Promise<{ success: boolean; data?: Student; error?: string }>;
+                delete: (studentId: string) => Promise<{ success: boolean; data?: { success: boolean }; error?: string }>;
                 getAll: (params: { page?: number; pageSize?: number; search?: string }) => Promise<{
                     success: boolean;
                     data?: {
@@ -171,7 +171,16 @@ declare global {
                         };
                     }; error?: string
                 }>;
-                revoke: (permitId: number) => Promise<{ success: boolean; data?: { success: boolean }; error?: string }>;
+                revoke: (permitId: number) => Promise<{
+                    success: boolean;
+                    data?: Permit & {
+                        student: Student;
+                        issuedBy: {
+                            username: string;
+                        } | null;
+                    }
+                    ; error?: string
+                }>;
                 stats: () => Promise<{
                     success: boolean; data?: {
                         status: 'active' | 'revoked' | 'expired';

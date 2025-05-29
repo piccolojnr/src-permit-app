@@ -2,7 +2,10 @@ import { Permit } from "@prisma/client"
 import { format } from "date-fns"
 import { Plus, Search, Trash2 } from "lucide-react"
 import { useEffect, useState } from "react"
+import { Link } from "react-router"
+import { usePermissions } from "@/components/hooks/use-permissions"
 import { toast } from "@/components/hooks/use-toast"
+import { sendRevokedPermitEmail } from "@/components/lib/email/permit-email-service"
 import { Button } from "@/components/shadcn/ui/button"
 import { Card, CardContent } from "@/components/shadcn/ui/card"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/ui/dialog"
@@ -11,7 +14,6 @@ import { Pagination, PaginationContent, PaginationItem, PaginationLink, Paginati
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/shadcn/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/ui/table"
 import CreatePermitForm from "./permit/create-permit-form"
-import { usePermissions } from "@/components/hooks/use-permissions"
 
 type SafePermit = Permit & {
     student: {
@@ -83,7 +85,24 @@ export function Permits() {
 
         try {
             const response = await window.api.permit.revoke(permitId)
-            if (response.success) {
+            if (response.success && response.data) {
+                // Send revocation email
+                await sendRevokedPermitEmail(
+                    {
+                        email: response.data.student.email,
+                        name: response.data.student.name,
+                        studentId: response.data.student.studentId,
+                        course: response.data.student.course,
+                        level: response.data.student.level
+                    },
+                    {
+                        id: response.data.id + "",
+                        amountPaid: response.data.amountPaid,
+                        expiryDate: new Date(response.data.expiryDate)
+                    },
+                    response.data.originalCode
+                )
+
                 toast({
                     title: "Success",
                     description: "Permit revoked successfully"
@@ -179,7 +198,9 @@ export function Permits() {
                                     <TableRow key={permit.id}>
                                         <TableCell className="font-medium">{permit.originalCode}</TableCell>
                                         <TableCell>
-                                            {permit.student.name} ({permit.student.studentId})
+                                            <Link to={`/students/${permit.student.studentId}`} className="text-blue-600 hover:underline">
+                                                {permit.student.name} ({permit.student.studentId})
+                                            </Link>
                                         </TableCell>
                                         <TableCell>
                                             <span

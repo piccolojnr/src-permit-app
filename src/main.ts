@@ -20,6 +20,7 @@ const createWindow = async () => {
         width: 800,
         height: 600,
         icon: path.join(__dirname, 'assets', 'app-icon.ico'),
+        backgroundColor: "#000000", // 👈 Black background
         webPreferences: {
             // contextIsolation: true,
             preload: path.join(__dirname, "preload.js")

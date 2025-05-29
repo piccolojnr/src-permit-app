@@ -105,8 +105,9 @@ export class PermitService {
             if (!student) {
                 return { success: false, error: "Student not found" };
             }
-
-            const permitCode = this.generatePermitCode();
+            const code = this.generatePermitCode();
+            const yearPrefix = new Date().getFullYear().toString().slice(-2);
+            const permitCode = `${yearPrefix}-${code}`;
             const hashedCode = await bcrypt.hash(permitCode, 10);
 
             const permit = await prisma.permit.create({
@@ -187,12 +188,20 @@ export class PermitService {
 
     static async revokePermit(permitId: number) {
         try {
-            await prisma.permit.update({
+            const permit = await prisma.permit.update({
                 where: { id: permitId },
-                data: { status: 'revoked' }
+                data: { status: 'revoked' },
+                include: {
+                    student: true,
+                    issuedBy: {
+                        select: {
+                            username: true
+                        }
+                    }
+                }
             });
 
-            return { success: true };
+            return permit;
         } catch (error: any) {
             throw new Error(error.message);
         }

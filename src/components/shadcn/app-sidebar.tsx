@@ -1,16 +1,16 @@
 import { BarChart3, FileCheck, Settings2, Users, Shield, KeyRound, Search } from "lucide-react"
 import * as React from "react"
+import { useNavigate } from "react-router"
 import { usePermissions } from "@/components/hooks/use-permissions"
 import { NavMain } from "@/components/shadcn/nav-main"
 import { NavUser } from "@/components/shadcn/nav-user"
+import { Input } from "@/components/shadcn/ui/input"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, useSidebar } from "@/components/shadcn/ui/sidebar"
 import { useAuth } from "../lib/auth/auth.context"
 import { cn } from "../lib/utils"
-import { Input } from "@/components/shadcn/ui/input"
-import { useNavigate } from "react-router"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-    const { open, openMobile } = useSidebar()
+    const { open, openMobile, toggleSidebar } = useSidebar()
     const permissions = usePermissions()
     const navigate = useNavigate()
     const [searchQuery, setSearchQuery] = React.useState("")
@@ -117,15 +117,15 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             </SidebarHeader>
             <SidebarContent>
                 {/* Search Bar */}
-                <form onSubmit={handleSearch} className="px-4 mb-4">
-                    <div className="relative">
+                <form onSubmit={handleSearch} className={cn("px-4 mb-4 mt-1", "flex items-center justify-between", open ? "w-full" : "w-64")}>
+                    <div className={cn("relative", !open ? "hidden" : "block")}>
                         <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input
-                            placeholder="Search..."
-                            value={searchQuery}
-                            onChange={(e) => setSearchQuery(e.target.value)}
-                            className="pl-8"
-                        />
+                        <Input placeholder="Search..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="pl-8" />
+                    </div>
+                    <div className={cn("relative", open ? "hidden" : "block", openMobile && "hidden")}>
+                        <button type="submit" className="transition-colors text-muted-foreground hover:text-primary" onClick={toggleSidebar}>
+                            <Search className="w-4 h-4" />
+                        </button>
                     </div>
                 </form>
                 <NavMain items={filteredNavItems} />

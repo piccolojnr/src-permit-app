@@ -5,13 +5,12 @@ import { ipcMain } from 'electron';
 ipcMain.handle('student:create', async (_, studentData: StudentData) => await StudentService.createStudent(studentData))
 
 // Get student by ID
-ipcMain.handle('student:get-by-id', async (_, studentId: number) => await StudentService.getStudentById(studentId));
-
+ipcMain.handle('student:get-by-id', async (_, studentId: string) => await StudentService.getStudentById(studentId));
 // Update student
-ipcMain.handle('student:update', async (_, studentId: number, studentData: Partial<StudentData>) => await StudentService.updateStudent(studentId, studentData));
+ipcMain.handle('student:update', async (_, studentId: string, studentData: Partial<StudentData>) => await StudentService.updateStudent(studentId, studentData));
 
 // Delete student
-ipcMain.handle('student:delete', async (_, studentId: number) => await StudentService.deleteStudent(studentId));
+ipcMain.handle('student:delete', async (_, studentId: string) => await StudentService.deleteStudent(studentId));
 
 // Get all students with pagination and search
 ipcMain.handle('student:get-all', async (_, params: { page?: number; pageSize?: number; search?: string }) => await StudentService.getStudents(params));

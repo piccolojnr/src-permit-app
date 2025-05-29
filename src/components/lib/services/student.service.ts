@@ -71,10 +71,10 @@ export class StudentService {
         }
     }
 
-    static async getStudentById(studentId: number): Promise<{ success: boolean; data?: Student & { permits: { issuedBy: { username: string } }[] }; error?: string }> {
+    static async getStudentById(studentId: string): Promise<{ success: boolean; data?: Student & { permits: { issuedBy: { username: string } | null }[] }; error?: string }> {
         try {
             const student = await prisma.student.findUnique({
-                where: { id: studentId },
+                where: { studentId: studentId },
                 include: {
                     permits: {
                         include: {
@@ -98,10 +98,10 @@ export class StudentService {
         }
     }
 
-    static async updateStudent(studentId: number, studentData: Partial<StudentData>): Promise<{ success: boolean; data?: Student; error?: string }> {
+    static async updateStudent(studentId: string, studentData: Partial<StudentData>): Promise<{ success: boolean; data?: Student; error?: string }> {
         try {
             const student = await prisma.student.update({
-                where: { id: studentId },
+                where: { studentId: studentId },
                 data: studentData
             });
             return { success: true, data: student };
@@ -110,10 +110,10 @@ export class StudentService {
         }
     }
 
-    static async deleteStudent(studentId: number): Promise<{ success: boolean; error?: string }> {
+    static async deleteStudent(studentId: string): Promise<{ success: boolean; error?: string }> {
         try {
             await prisma.student.delete({
-                where: { id: studentId }
+                where: { studentId: studentId }
             });
             return { success: true };
         } catch (error: any) {

@@ -4,11 +4,13 @@ import { useEffect, useState } from "react"
 import { Link, useNavigate } from "react-router"
 import { usePermissions } from "@/components/hooks/use-permissions"
 import { toast } from "@/components/hooks/use-toast"
+import { useAuth } from "@/components/lib/auth/auth.context"
 import { DashboardStats } from "@/components/lib/services/dashboard.service"
 import { Button } from "@/components/shadcn/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/shadcn/ui/card"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/shadcn/ui/dialog"
 import { Progress } from "@/components/shadcn/ui/progress"
-import { useAuth } from "@/components/lib/auth/auth.context"
+import CreatePermitForm from "./permit/create-permit-form"
 
 export function Dashboard() {
     const [stats, setStats] = useState<DashboardStats>({
@@ -17,6 +19,7 @@ export function Dashboard() {
         expiringSoon: 0,
         totalRevenue: 0
     })
+    const [isPermitDialogOpen, setIsPermitDialogOpen] = useState(false)
     const [isLoading, setIsLoading] = useState(true)
     const permissions = usePermissions()
     const { user } = useAuth()
@@ -57,18 +60,18 @@ export function Dashboard() {
 
     // Time-based greeting
     const getGreeting = () => {
-        const hour = new Date().getHours();
-        if (hour < 12) return "Good morning";
-        if (hour < 18) return "Good afternoon";
-        return "Good evening";
-    };
+        const hour = new Date().getHours()
+        if (hour < 12) return "Good morning"
+        if (hour < 18) return "Good afternoon"
+        return "Good evening"
+    }
 
     const quickActions = [
         {
             title: "New Permit",
             description: "Create a new permit application",
             icon: Plus,
-            action: () => navigate("/permits/new")
+            action: () => setIsPermitDialogOpen(true)
         },
         {
             title: "View Permits",
@@ -86,13 +89,13 @@ export function Dashboard() {
             title: "Download Reports",
             description: "Generate and download reports",
             icon: Download,
-            action: () => navigate("/reports")
+            action: () => navigate("/settings/reports")
         }
     ]
 
     return (
         <div className="space-y-6">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
+            <div className="flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
                     <p className="text-muted-foreground">Welcome to your permit management dashboard</p>
@@ -110,10 +113,10 @@ export function Dashboard() {
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {quickActions.map((action, index) => (
-                    <Card key={index} className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={action.action}>
-                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                    <Card key={index} className="transition-colors cursor-pointer hover:bg-accent/50" onClick={action.action}>
+                        <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium">{action.title}</CardTitle>
-                            <action.icon className="h-4 w-4 text-muted-foreground" />
+                            <action.icon className="w-4 h-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <p className="text-xs text-muted-foreground">{action.description}</p>
@@ -245,7 +248,22 @@ export function Dashboard() {
                     </CardContent>
                 </Card>
             </div>
-
+            {permissions.canCreatePermits() && (
+                <Dialog open={isPermitDialogOpen} onOpenChange={setIsPermitDialogOpen}>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Create New Permit</DialogTitle>
+                            <DialogDescription>Create a new permit for a student</DialogDescription>
+                        </DialogHeader>
+                        <CreatePermitForm
+                            onSuccess={() => {
+                                setIsPermitDialogOpen(false)
+                            }}
+                            setIsDialogOpen={setIsPermitDialogOpen}
+                        />
+                    </DialogContent>
+                </Dialog>
+            )}
             <Card>
                 <CardHeader>
                     <CardTitle>System Information</CardTitle>

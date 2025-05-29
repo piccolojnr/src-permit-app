@@ -16,6 +16,7 @@ import { Permits } from "@/pages/permits"
 import { Reports } from "@/pages/reports"
 import { Settings } from "@/pages/settings"
 import { Students } from "@/pages/students"
+import { StudentDetails } from "@/pages/students/student-details"
 import { Search } from "@/pages/search"
 import { NotFound } from "./pages/not-found"
 
@@ -65,6 +66,14 @@ root.render(
                             element={
                                 <ProtectedRoute requiredPermission="canViewStudents">
                                     <Students />
+                                </ProtectedRoute>
+                            }
+                        />
+                        <Route
+                            path="students/:id"
+                            element={
+                                <ProtectedRoute requiredPermission="canViewStudents">
+                                    <StudentDetails />
                                 </ProtectedRoute>
                             }
                         />

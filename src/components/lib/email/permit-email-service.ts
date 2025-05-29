@@ -1,6 +1,7 @@
 import { toast } from "@/components/hooks/use-toast"
 import { generatePermitEmailTemplate } from "./template-views/permit-email-template"
 import { generateReceiptEmailTemplate } from "./template-views/receipt-email-template"
+import { generateRevokedPermitEmailTemplate } from "./template-views/revoked-permit-email-template"
 
 interface PermitResponse {
   data: {
@@ -101,4 +102,47 @@ async function sendReceiptEmail(
       }
     ]
   })
+}
+
+export async function sendRevokedPermitEmail(
+  student: {
+    email: string
+    name: string
+    studentId: string
+    course: string
+    level: string
+  },
+  permit: {
+    id: string
+    amountPaid: number
+    expiryDate: Date
+  },
+  permitCode: string
+) {
+  const { html, text } = generateRevokedPermitEmailTemplate({
+    student,
+    permit,
+    permitCode,
+  })
+
+  try {
+    await window.api.email.send({
+      to: student.email,
+      subject: "Knutsford University SRC - Permit Revoked",
+      text,
+      html,
+    })
+
+    toast({
+      title: "Email Sent",
+      description: "Revocation notice has been sent to the student's email.",
+    })
+  } catch (error) {
+    console.error("Error sending revoked permit email:", error)
+    toast({
+      title: "Email Error",
+      description: "Failed to send revocation notice. Please check your email settings.",
+      variant: "destructive",
+    })
+  }
 }

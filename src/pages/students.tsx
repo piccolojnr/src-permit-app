@@ -1,32 +1,18 @@
-import { Student } from "@prisma/client"
-import { format } from "date-fns"
-import { FileUp, MenuIcon, Pencil, Plus, Search, Trash2 } from "lucide-react"
+"use client"
+
+import type { Student } from "@prisma/client"
+import type React from "react"
 import { useEffect, useState } from "react"
-import { toast } from "@/components/hooks/use-toast"
-import { Button } from "@/components/shadcn/ui/button"
-import { Card, CardContent } from "@/components/shadcn/ui/card"
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/shadcn/ui/dialog"
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
-    DropdownMenuTrigger
-} from "@/components/shadcn/ui/dropdown-menu"
-import { Input } from "@/components/shadcn/ui/input"
-import { Label } from "@/components/shadcn/ui/label"
-import {
-    Pagination,
-    PaginationContent,
-    PaginationItem,
-    PaginationLink,
-    PaginationNext,
-    PaginationPrevious
-} from "@/components/shadcn/ui/pagination"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/shadcn/ui/table"
-import CreatePermitForm from "./permit/create-permit-form"
 import { usePermissions } from "@/components/hooks/use-permissions"
+import { toast } from "@/components/hooks/use-toast"
+import { StudentFormValues } from "@/components/lib/schemas/student-schema"
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/shadcn/ui/dialog"
+import { Input } from "@/components/shadcn/ui/input"
+import CreatePermitForm from "./permit/create-permit-form"
+import { StudentForm } from "./students/student-form"
+import { StudentPagination } from "./students/student-pagination"
+import { StudentTable } from "./students/student-table"
+import { StudentToolbar } from "./students/student-toolbar"
 
 export function Students() {
     const permissions = usePermissions()
@@ -40,14 +26,7 @@ export function Students() {
     const [currentPage, setCurrentPage] = useState(1)
     const [totalPages, setTotalPages] = useState(1)
     const [pageSize] = useState(10)
-    const [formData, setFormData] = useState({
-        studentId: "",
-        name: "",
-        email: "",
-        course: "",
-        level: "",
-        number: ""
-    })
+    const [isSubmitting, setIsSubmitting] = useState(false)
 
     useEffect(() => {
         loadStudents()
@@ -55,6 +34,7 @@ export function Students() {
 
     const loadStudents = async () => {
         try {
+            setIsLoading(true)
             const response = await window.api.student.getAll({
                 page: currentPage,
                 pageSize,
@@ -83,8 +63,7 @@ export function Students() {
         }
     }
 
-    const handleSubmit = async (e: React.FormEvent) => {
-        e.preventDefault()
+    const handleSubmit = async (data: StudentFormValues) => {
         if (!permissions.canManageStudents()) {
             toast({
                 title: "Permission Denied",
@@ -95,7 +74,8 @@ export function Students() {
         }
 
         try {
-            const response = selectedStudent ? await window.api.student.update(selectedStudent.id, formData) : await window.api.student.create(formData)
+            setIsSubmitting(true)
+            const response = selectedStudent ? await window.api.student.update(selectedStudent.studentId, data) : await window.api.student.create(data)
 
             if (response.success) {
                 toast({
@@ -117,10 +97,12 @@ export function Students() {
                 description: `Failed to ${selectedStudent ? "update" : "create"} student`,
                 variant: "destructive"
             })
+        } finally {
+            setIsSubmitting(false)
         }
     }
 
-    const handleDelete = async (studentId: number) => {
+    const handleDelete = async (studentId: string) => {
         if (!permissions.canManageStudents()) {
             toast({
                 title: "Permission Denied",
@@ -156,7 +138,7 @@ export function Students() {
         }
     }
 
-    const handleImport = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const handleImport = async () => {
         if (!permissions.canManageStudents()) {
             toast({
                 title: "Permission Denied",
@@ -166,6 +148,11 @@ export function Students() {
             return
         }
 
+        const fileInput = document.getElementById("import-file") as HTMLInputElement
+        fileInput?.click()
+    }
+
+    const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0]
         if (!file) return
 
@@ -196,9 +183,12 @@ export function Students() {
                 variant: "destructive"
             })
         }
+
+        // Reset the file input
+        e.target.value = ""
     }
 
-    const openEditDialog = (student: Student) => {
+    const handleEdit = (student: Student) => {
         if (!permissions.canManageStudents()) {
             toast({
                 title: "Permission Denied",
@@ -209,18 +199,10 @@ export function Students() {
         }
 
         setSelectedStudent(student)
-        setFormData({
-            studentId: student.studentId,
-            name: student.name,
-            email: student.email,
-            course: student.course,
-            level: student.level,
-            number: student.number
-        })
         setIsDialogOpen(true)
     }
 
-    const openCreateDialog = () => {
+    const handleAddStudent = () => {
         if (!permissions.canManageStudents()) {
             toast({
                 title: "Permission Denied",
@@ -231,164 +213,59 @@ export function Students() {
         }
 
         setSelectedStudent(null)
-        setFormData({
-            studentId: "",
-            name: "",
-            email: "",
-            course: "",
-            level: "",
-            number: ""
-        })
         setIsDialogOpen(true)
+    }
+
+    const handleCreatePermit = (student: Student) => {
+        setSelectedStudentForPermit(student)
+        setIsPermitDialogOpen(true)
+    }
+
+    const handleDialogClose = (open: boolean) => {
+        setIsDialogOpen(open)
+        if (!open) {
+            setSelectedStudent(null)
+        }
+    }
+
+    const handleSearchChange = (query: string) => {
+        setSearchQuery(query)
+        setCurrentPage(1) // Reset to first page on new search
     }
 
     return (
         <div className="space-y-4">
-            <div className="flex items-center justify-between">
-                <h2 className="text-3xl font-bold tracking-tight">Students</h2>
-                <div className="flex items-center gap-2">
-                    <div className="relative">
-                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
-                        <Input placeholder="Search students..." className="pl-8" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} />
-                    </div>
-                    {permissions.canManageStudents() && (
-                        <>
-                            <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-                                <DialogTrigger asChild>
-                                    <Button onClick={openCreateDialog}>
-                                        <Plus className="w-4 h-4 mr-2" />
-                                        Add Student
-                                    </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                    <DialogHeader>
-                                        <DialogTitle>{selectedStudent ? "Edit Student" : "Add Student"}</DialogTitle>
-                                        <DialogDescription>{selectedStudent ? "Update student information" : "Add a new student to the system"}</DialogDescription>
-                                    </DialogHeader>
-                                    <form onSubmit={handleSubmit} className="space-y-4">
-                                        <div className="space-y-2">
-                                            <Label htmlFor="studentId">Student ID</Label>
-                                            <Input
-                                                id="studentId"
-                                                value={formData.studentId}
-                                                onChange={e => setFormData({ ...formData, studentId: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="name">Name</Label>
-                                            <Input id="name" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })} required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="email">Email</Label>
-                                            <Input
-                                                id="email"
-                                                type="email"
-                                                value={formData.email}
-                                                onChange={e => setFormData({ ...formData, email: e.target.value })}
-                                                required
-                                            />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="course">Course</Label>
-                                            <Input id="course" value={formData.course} onChange={e => setFormData({ ...formData, course: e.target.value })} required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="level">Level</Label>
-                                            <Input id="level" value={formData.level} onChange={e => setFormData({ ...formData, level: e.target.value })} required />
-                                        </div>
-                                        <div className="space-y-2">
-                                            <Label htmlFor="number">Phone Number</Label>
-                                            <Input id="number" value={formData.number} onChange={e => setFormData({ ...formData, number: e.target.value })} required />
-                                        </div>
-                                        <DialogFooter>
-                                            <Button type="submit">{selectedStudent ? "Update Student" : "Add Student"}</Button>
-                                        </DialogFooter>
-                                    </form>
-                                </DialogContent>
-                            </Dialog>
-                            <div className="relative">
-                                <Input type="file" accept=".csv" className="hidden" id="import-file" onChange={handleImport} />
-                                <Button variant="outline" onClick={() => document.getElementById("import-file")?.click()}>
-                                    <FileUp className="w-4 h-4 mr-2" />
-                                    Import
-                                </Button>
-                            </div>
-                        </>
-                    )}
-                </div>
-            </div>
+            <StudentToolbar
+                searchQuery={searchQuery}
+                onSearchChange={handleSearchChange}
+                onAddStudent={handleAddStudent}
+                onImport={handleImport}
+                canManageStudents={permissions.canManageStudents()}
+            />
 
-            <Card>
-                <CardContent className="p-0">
-                    <Table>
-                        <TableHeader>
-                            <TableRow>
-                                <TableHead>Student ID</TableHead>
-                                <TableHead>Name</TableHead>
-                                <TableHead>Email</TableHead>
-                                <TableHead>Course</TableHead>
-                                <TableHead>Level</TableHead>
-                                <TableHead>Phone</TableHead>
-                                <TableHead>Created At</TableHead>
-                                {(permissions.canManageStudents() || permissions.canCreatePermits()) && <TableHead>Actions</TableHead>}
-                            </TableRow>
-                        </TableHeader>
-                        <TableBody>
-                            {students.map(student => (
-                                <TableRow key={student.id}>
-                                    <TableCell className="font-medium">{student.studentId}</TableCell>
-                                    <TableCell>{student.name}</TableCell>
-                                    <TableCell>{student.email}</TableCell>
-                                    <TableCell>{student.course}</TableCell>
-                                    <TableCell>{student.level}</TableCell>
-                                    <TableCell>{student.number}</TableCell>
-                                    <TableCell>{format(new Date(student.createdAt), "MMM d, yyyy")}</TableCell>
-                                    {(permissions.canManageStudents() || permissions.canCreatePermits()) && (
-                                        <TableCell>
-                                            <DropdownMenu>
-                                                <DropdownMenuTrigger asChild>
-                                                    <Button variant="outline" size="sm">
-                                                        <MenuIcon className="w-4 h-4" />
-                                                    </Button>
-                                                </DropdownMenuTrigger>
-                                                <DropdownMenuContent>
-                                                    <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                                    <DropdownMenuSeparator />
-                                                    {permissions.canManageStudents() && (
-                                                        <>
-                                                            <DropdownMenuItem onClick={() => openEditDialog(student)}>
-                                                                <Pencil className="w-4 h-4 mr-2" /> Edit
-                                                            </DropdownMenuItem>
-                                                            <DropdownMenuItem onClick={() => handleDelete(student.id)} className="text-red-600">
-                                                                <Trash2 className="w-4 h-4 mr-2" />
-                                                                Delete
-                                                            </DropdownMenuItem>
-                                                        </>
-                                                    )}
-                                                    {permissions.canCreatePermits() && (
-                                                        <DropdownMenuItem>
-                                                            <Button
-                                                                onClick={() => {
-                                                                    setSelectedStudentForPermit(student)
-                                                                    setIsPermitDialogOpen(true)
-                                                                }}
-                                                            >
-                                                                <Plus className="w-4 h-4 mr-2" />
-                                                                New Permit
-                                                            </Button>
-                                                        </DropdownMenuItem>
-                                                    )}
-                                                </DropdownMenuContent>
-                                            </DropdownMenu>
-                                        </TableCell>
-                                    )}
-                                </TableRow>
-                            ))}
-                        </TableBody>
-                    </Table>
-                </CardContent>
-            </Card>
+            <Input type="file" accept=".csv" className="hidden" id="import-file" onChange={handleFileChange} />
+
+            <StudentTable
+                students={students}
+                canManageStudents={permissions.canManageStudents()}
+                canCreatePermits={permissions.canCreatePermits()}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onCreatePermit={handleCreatePermit}
+            />
+
+            <StudentPagination currentPage={currentPage} totalPages={totalPages} onPageChange={setCurrentPage} />
+
+            <Dialog open={isDialogOpen} onOpenChange={handleDialogClose}>
+                <DialogContent className="max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>{selectedStudent ? "Edit Student" : "Add Student"}</DialogTitle>
+                        <DialogDescription>{selectedStudent ? "Update student information" : "Add a new student to the system"}</DialogDescription>
+                    </DialogHeader>
+                    <StudentForm student={selectedStudent} onSubmit={handleSubmit} isSubmitting={isSubmitting} />
+                </DialogContent>
+            </Dialog>
+
             {permissions.canCreatePermits() && (
                 <Dialog open={isPermitDialogOpen} onOpenChange={setIsPermitDialogOpen}>
                     <DialogContent>
@@ -406,23 +283,6 @@ export function Students() {
                     </DialogContent>
                 </Dialog>
             )}
-            <Pagination>
-                <PaginationContent>
-                    <PaginationItem>
-                        <PaginationPrevious onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage === 1} />
-                    </PaginationItem>
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                        <PaginationItem key={page}>
-                            <PaginationLink onClick={() => setCurrentPage(page)} isActive={currentPage === page}>
-                                {page}
-                            </PaginationLink>
-                        </PaginationItem>
-                    ))}
-                    <PaginationItem>
-                        <PaginationNext onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage === totalPages} />
-                    </PaginationItem>
-                </PaginationContent>
-            </Pagination>
         </div>
     )
 }
