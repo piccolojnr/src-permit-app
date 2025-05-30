@@ -1,13 +1,14 @@
 import { format } from "date-fns"
-import { Users, FileCheck, AlertCircle, DollarSign, TrendingUp, Calendar, Clock, BarChart3 } from "lucide-react"
+import { Users, FileCheck, AlertCircle, DollarSign, TrendingUp, Calendar, Clock, BarChart3, Plus, Download } from "lucide-react"
 import { useEffect, useState } from "react"
-import { Link } from "react-router"
+import { Link, useNavigate } from "react-router"
 import { usePermissions } from "@/components/hooks/use-permissions"
 import { toast } from "@/components/hooks/use-toast"
 import { DashboardStats } from "@/components/lib/services/dashboard.service"
 import { Button } from "@/components/shadcn/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/shadcn/ui/card"
 import { Progress } from "@/components/shadcn/ui/progress"
+import { useAuth } from "@/components/lib/auth/auth.context"
 
 export function Dashboard() {
     const [stats, setStats] = useState<DashboardStats>({
@@ -18,6 +19,8 @@ export function Dashboard() {
     })
     const [isLoading, setIsLoading] = useState(true)
     const permissions = usePermissions()
+    const { user } = useAuth()
+    const navigate = useNavigate()
 
     useEffect(() => {
         const fetchStats = async () => {
@@ -52,17 +55,71 @@ export function Dashboard() {
 
     const utilizationRate = stats.totalStudents > 0 ? (stats.activePermits / stats.totalStudents) * 100 : 0
 
+    // Time-based greeting
+    const getGreeting = () => {
+        const hour = new Date().getHours();
+        if (hour < 12) return "Good morning";
+        if (hour < 18) return "Good afternoon";
+        return "Good evening";
+    };
+
+    const quickActions = [
+        {
+            title: "New Permit",
+            description: "Create a new permit application",
+            icon: Plus,
+            action: () => navigate("/permits/new")
+        },
+        {
+            title: "View Permits",
+            description: "View all permit applications",
+            icon: FileCheck,
+            action: () => navigate("/permits")
+        },
+        {
+            title: "Manage Students",
+            description: "View and manage student records",
+            icon: Users,
+            action: () => navigate("/students")
+        },
+        {
+            title: "Download Reports",
+            description: "Generate and download reports",
+            icon: Download,
+            action: () => navigate("/reports")
+        }
+    ]
+
     return (
         <div className="space-y-6">
-            <div className="flex items-center justify-between">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-2">
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">Dashboard</h2>
                     <p className="text-muted-foreground">Welcome to your permit management dashboard</p>
+                    {user && (
+                        <div className="mt-1 text-lg font-semibold">
+                            {getGreeting()}, {user.username}!
+                        </div>
+                    )}
                 </div>
                 <Button onClick={() => window.location.reload()}>
                     <Clock className="w-4 h-4 mr-2" />
                     Refresh
                 </Button>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {quickActions.map((action, index) => (
+                    <Card key={index} className="cursor-pointer hover:bg-accent/50 transition-colors" onClick={action.action}>
+                        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                            <CardTitle className="text-sm font-medium">{action.title}</CardTitle>
+                            <action.icon className="h-4 w-4 text-muted-foreground" />
+                        </CardHeader>
+                        <CardContent>
+                            <p className="text-xs text-muted-foreground">{action.description}</p>
+                        </CardContent>
+                    </Card>
+                ))}
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
@@ -94,7 +151,7 @@ export function Dashboard() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium">Expiring Soon</CardTitle>
-                            <AlertCircle className="w-4 h-4 text-muted-foreground" />
+                            <FileCheck className="w-4 h-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold">{stats.expiringSoon}</div>
@@ -106,10 +163,10 @@ export function Dashboard() {
                     <Card>
                         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
                             <CardTitle className="text-sm font-medium">Total Revenue</CardTitle>
-                            <DollarSign className="w-4 h-4 text-muted-foreground" />
+                            <FileCheck className="w-4 h-4 text-muted-foreground" />
                         </CardHeader>
                         <CardContent>
-                            <div className="text-2xl font-bold">${stats.totalRevenue.toFixed(2)}</div>
+                            <div className="text-2xl font-bold">GHS {stats.totalRevenue.toLocaleString()}</div>
                             <p className="text-xs text-muted-foreground">Total revenue from permits</p>
                         </CardContent>
                     </Card>
@@ -134,7 +191,7 @@ export function Dashboard() {
                             <div className="space-y-1">
                                 <p className="text-sm text-muted-foreground">Average Revenue per Student</p>
                                 <p className="text-2xl font-bold">
-                                    ${stats.totalStudents > 0 ? (stats.totalRevenue / stats.totalStudents).toFixed(2) : "0.00"}
+                                    GHS {stats.totalStudents > 0 ? (stats.totalRevenue / stats.totalStudents).toFixed(2) : "0.00"}
                                 </p>
                             </div>
                             <div className="space-y-1">

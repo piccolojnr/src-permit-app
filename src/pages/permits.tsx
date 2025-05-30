@@ -196,7 +196,7 @@ export function Permits() {
                                         </TableCell>
                                         <TableCell>{format(new Date(permit.startDate), "MMM d, yyyy")}</TableCell>
                                         <TableCell>{format(new Date(permit.expiryDate), "MMM d, yyyy")}</TableCell>
-                                        <TableCell>${permit.amountPaid.toFixed(2)}</TableCell>
+                                        <TableCell>GHS {permit.amountPaid.toFixed(2)}</TableCell>
                                         <TableCell>{permit.issuedBy?.username || "Unknown"}</TableCell>
                                         {permissions.canRevokePermits() && (
                                             <TableCell>

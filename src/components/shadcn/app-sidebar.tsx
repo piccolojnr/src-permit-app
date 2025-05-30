@@ -1,4 +1,4 @@
-import { BarChart3, FileCheck, Settings2, Users, Shield, KeyRound } from "lucide-react"
+import { BarChart3, FileCheck, Settings2, Users, Shield, KeyRound, Search } from "lucide-react"
 import * as React from "react"
 import { usePermissions } from "@/components/hooks/use-permissions"
 import { NavMain } from "@/components/shadcn/nav-main"
@@ -6,10 +6,23 @@ import { NavUser } from "@/components/shadcn/nav-user"
 import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarRail, useSidebar } from "@/components/shadcn/ui/sidebar"
 import { useAuth } from "../lib/auth/auth.context"
 import { cn } from "../lib/utils"
+import { Input } from "@/components/shadcn/ui/input"
+import { useNavigate } from "react-router"
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     const { open, openMobile } = useSidebar()
     const permissions = usePermissions()
+    const navigate = useNavigate()
+    const [searchQuery, setSearchQuery] = React.useState("")
+
+    const handleSearch = (e: React.FormEvent) => {
+        e.preventDefault()
+        if (searchQuery.trim()) {
+            // Navigate to search results page with query parameter
+            navigate(`/search?q=${encodeURIComponent(searchQuery.trim())}`)
+            setSearchQuery("")
+        }
+    }
 
     // This is sample data.
     const navigationData = {
@@ -103,6 +116,18 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 </div>
             </SidebarHeader>
             <SidebarContent>
+                {/* Search Bar */}
+                <form onSubmit={handleSearch} className="px-4 mb-4">
+                    <div className="relative">
+                        <Search className="absolute left-2 top-2.5 h-4 w-4 text-muted-foreground" />
+                        <Input
+                            placeholder="Search..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            className="pl-8"
+                        />
+                    </div>
+                </form>
                 <NavMain items={filteredNavItems} />
             </SidebarContent>
             <SidebarFooter>

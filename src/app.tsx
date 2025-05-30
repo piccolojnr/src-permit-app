@@ -16,6 +16,7 @@ import { Permits } from "@/pages/permits"
 import { Reports } from "@/pages/reports"
 import { Settings } from "@/pages/settings"
 import { Students } from "@/pages/students"
+import { Search } from "@/pages/search"
 import { NotFound } from "./pages/not-found"
 
 const root = createRoot(document.body)
@@ -37,6 +38,16 @@ root.render(
                         }
                     >
                         <Route index element={<Dashboard />} />
+
+                        {/* Search Route */}
+                        <Route
+                            path="search"
+                            element={
+                                <ProtectedRoute>
+                                    <Search />
+                                </ProtectedRoute>
+                            }
+                        />
 
                         {/* Permits Routes */}
                         <Route
